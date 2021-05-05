@@ -1,0 +1,51 @@
+<table class = "table" id = "myTable">
+    <thead>
+        <tr>
+            <th style = "width: 20%;">ユーザー名</th>
+            <th onclick="w3.sortHTML('#myTable','.item','td:nth-child(2)')" sytle = "width: 15%;">カタカナ <i class="fas fa-sort"></i></th>
+            <th onclick="w3.sortHTML('#myTable','.item','td:nth-child(3)')" sytle = "width: 10%;">部署 <i class="fas fa-sort"></i></th>
+            <th onclick="w3.sortHTML('#myTable','.item','td:nth-child(4)')" style = "width: 10%;">出勤時刻 <i class="fas fa-sort"></i></th>
+            <th onclick="w3.sortHTML('#myTable','.item','td:nth-child(5)')" style = "width: 10%;">退勤時刻 <i class="fas fa-sort"></i></th>
+            <th onclick="w3.sortHTML('#myTable','.item','td:nth-child(6)')" style = "width: 10%;">状態 <i class="fas fa-sort"></i></th>
+            <th onclick="w3.sortHTML('#myTable','.item','td:nth-child(7)')" style = "width: 10%;">有給取得 <i class="fas fa-sort"></i></th>
+            <th style = "width: 10%;">リンク</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% @not_users.each do |user| %>
+            <tr class = "item">
+                <td><%= user.name %></td>
+                <td><%= user.kana %></td>
+                <td class = "department"><%= user.department %></td>
+                <td class = "time">-</td>
+                <td class = "time">-</td>
+                <% if @paid_users.include?(user.public_uid) %>
+                    <td class = "paid-status attendance">有給</td>
+                    <td class = "paid">○</td>
+                <% else %>
+                    <td class = "before-work attendance">出社前</td>
+                    <td class = "paid">-</td>
+                <% end %>
+                <td class = "paid"><%= link_to "詳細", management_path(user.public_uid) %></td>
+            </tr>
+        <% end %>
+        <% @attendances.each do |attendance| %>
+            <tr class = "item">
+                <td><%= attendance.user.name %></td>
+                <td><%= attendance.user.kana %></td>
+                <td class = "department"><%= attendance.user.department %></td>
+                <td class = "time"><%= attendance.arrived_at.strftime("%H:%M") %></td>
+                <% if attendance.left_at.present? %>
+                    <td class = "time"><%= attendance.left_at.strftime("%H:%M") %></td>
+                    <td class = "after-leave attendance">退勤済</td>
+                <% else %>
+                    <td class = "time">-</td>
+                    <td class = "attend-work attendance">勤務中</td>
+                <% end %>
+                <td class = "paid">-</td>
+                <td class = "paid"><%= link_to "詳細", management_path(attendance.user.public_uid) %></td>
+            </tr>
+        <% end %>
+    </tbody>
+</table>
+

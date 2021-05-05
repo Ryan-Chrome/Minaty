@@ -1,0 +1,101 @@
+<% #スケジュール作成モーダル（日付選択時）用JS %>
+<% #スケジュール作成モーダル 追加 %>
+modal.insertAdjacentHTML("beforeend", "<%= j(render "schedules/new") %>");
+var add_schedule_next = document.getElementById("add-schedule-next");
+add_schedule_next.style.display = "block";
+var add_schedule_next_close = document.getElementById("add-schedule-next-close");
+var add_schedule_next_back = document.getElementById("add-schedule-next-back");
+add_schedule_next_close.onclick = () => {
+    modal.style.display = "none";
+    add_schedule_next.remove();
+}
+add_schedule_next_back.onclick = () => {
+    add_schedule_next.remove();
+    add_schedule_data_content.style.display = "block";
+}
+<% #スケジュール作成日程選択モーダル 非表示 %>
+var add_schedule_data_content = document.getElementById("add-schedule-data");
+add_schedule_data_content.style.display = "none";
+<% #スケジュール作成モーダル スケジュールBOX関連 %>
+var number = Number("<%= @schedules.length %>");
+for(var i=0; i < number; i++){
+    var schedule = document.getElementsByClassName(`add-schedule-${i}`);
+    var schedule_height = 0;
+    for(var s=0; s < schedule.length; s++){
+        if(i%2 == 0){
+            schedule[s].style.backgroundColor = "rgba(29, 29, 29, 0.9)";
+        } else {
+            schedule[s].style.backgroundColor = "rgba(37, 76, 109, 0.9)";
+        }
+        schedule_height += schedule[s].offsetHeight;
+    }
+    if(schedule_height < 40){
+        var schedule_time = document.getElementById(`add-schedule-time-${i}`);
+        var schedule_name = document.getElementById(`add-schedule-name-${i}`);
+        schedule_time.style.display = "none";
+        schedule_name.style.display = "none";
+        for(var s=0; s < schedule.length; s++){
+            schedule[s].classList.add("add-need-details");
+            if(s === 0){
+                var schedule_details_element = document.createElement("p");
+                schedule_details_element.setAttribute("id", `add-schedule-details-${i}`);
+                schedule_details_element.setAttribute("class", `add-schedule-details`);
+                var schedule_details_text_1 = document.createTextNode(`${schedule_name.textContent}`);
+                var schedule_details_text_2 = document.createElement("br");
+                var schedule_details_text_3 = document.createTextNode(`${schedule_time.textContent}`);
+                schedule_details_element.appendChild(schedule_details_text_1);
+                schedule_details_element.appendChild(schedule_details_text_2);
+                schedule_details_element.appendChild(schedule_details_text_3);
+                schedule[0].appendChild(schedule_details_element);
+            }
+            schedule[s].addEventListener("mouseover", (event) => {
+                var schedule_number = (event.target.classList[0].replace(/[^0-9]/g, ''));
+                var schedule_details = document.getElementById(`add-schedule-details-${schedule_number}`);
+                schedule_details.style.display = "block";
+            }, false);
+            schedule[s].addEventListener("mouseleave", (event) => {
+                var schedule_number = (event.target.classList[0].replace(/[^0-9]/g, ''));
+                var schedule_details = document.getElementById(`add-schedule-details-${schedule_number}`);
+                schedule_details.style.display = "none";
+            }, false);
+        }
+    }
+}
+<% #スケジュール作成モーダル 時間セレクト 初期値設定 %>
+document.getElementById("schedule_start_at_1i").remove();
+document.getElementById("schedule_start_at_2i").remove();
+document.getElementById("schedule_start_at_3i").remove();
+document.getElementById("schedule_finish_at_1i").remove();
+document.getElementById("schedule_finish_at_2i").remove();
+document.getElementById("schedule_finish_at_3i").remove();
+var end_time_hour = document.getElementById("schedule_finish_at_4i");
+var end_time_minute = document.getElementById("schedule_finish_at_5i");
+
+var optionElm = document.createElement("option");
+optionElm.textContent = "00";
+optionElm.value = "00";
+if(end_time_hour.value === "24"){
+    end_time_minute.innerHTML = "";
+    end_time_minute.appendChild(optionElm);
+}
+
+var optionElmTimes = ["10", "20", "30", "40", "50"];
+var optionElms = [];
+optionElmTimes.forEach((time) => {
+    var option = document.createElement("option");
+    option.textContent = time;
+    option.value = time;
+    optionElms.push(option);
+});
+
+end_time_hour.onchange = (e) => {
+    if(e.target.value === "24"){
+        end_time_minute.innerHTML = "";
+        end_time_minute.appendChild(optionElm);
+    } else if(e.target.value !== "24" && end_time_minute.children.length == 1){
+        optionElms.forEach((opt) => {
+            end_time_minute.appendChild(opt);
+        });
+    }
+}
+

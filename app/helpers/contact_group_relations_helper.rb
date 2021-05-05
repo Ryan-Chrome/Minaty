@@ -1,0 +1,2 @@
+module ContactGroupRelationsHelper
+end

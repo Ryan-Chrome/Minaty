@@ -1,0 +1,31 @@
+<div id = "add-schedule-next">
+    <div id = "add-schedule-next-main">
+        <div class = "modal-top-bar">
+            <ul>
+                <li class = "topbar-header">スケジュール追加</li>
+                <li id = "add-schedule-next-close" class = "topbar-close-btn"><span>＋</span></li>
+            </ul>
+        </div>
+        <%= form_with(model: @schedule) do |f| %>
+            <%= f.hidden_field :work_on, value: @new_schedule_date %>
+            
+            <%= f.label :name, "内容" %>
+            <%= f.text_field :name, class: "form" %>
+
+            <%= f.label :start_at, "開始時間" %>
+            <div class = "schedule-time-form">
+                <%= f.time_select :start_at, {minute_step: 10} %>
+            </div>
+
+            <%= f.label :finish_at, "終了時間" %>
+            <div class = "schedule-time-form">
+                <%= f.time_select :finish_at, {minute_step: 10, end_hour: 24} %>
+            </div>
+
+            <%= f.submit "登録", class: "btn", id: "new-schedule-submit" %>
+        <% end %>
+    </div>
+    <div id = "add-schedule-next-sub">
+        <%= render "schedules/new_sub" %>
+    </div>
+</div>

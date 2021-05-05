@@ -1,0 +1,216 @@
+<% if @receive_users.present? %>
+    modal.style.display = "block";
+    modal.insertAdjacentHTML("beforeend", "<%= j(render "general_messages/show") %>");
+    var receiver_list = document.getElementById("message-receivers-container");
+    receiver_list.style.display = "block";
+    var receiver_close_btn = document.getElementById("message-receivers-close");
+    receiver_close_btn.onclick = () => {
+        receiver_list.remove()
+        modal.style.display = "none";
+    }
+
+    var receiver_user_selector = document.getElementsByClassName("receiver-selector");
+    var receiver_list_all_select = document.getElementById("receiver-list-all-select");
+    var chat_send_list_form = document.getElementById("chat-send-users-form-list");
+    var chat_send_list_input = chat_send_list_form.getElementsByTagName("input");
+
+    <% # 既に選択されているユーザーを選択する %>
+    for(var i=0; i < chat_send_list_input.length; i++){
+        var check_id = chat_send_list_input[i].value;
+        var receiver_target = document.getElementsByClassName(`receiver-selector-${check_id}`)[0];
+        if(receiver_target){
+            var receiver_checkbox = receiver_target.getElementsByTagName("input")[0];
+            receiver_checkbox.checked = true;
+            receiver_target.style.background = "white";
+            receiver_target.style.color = "black";
+            receiver_target.style.fontWeight = "bold";
+            receiver_target.classList.add("selected");
+        }
+        var selected_receiver = receiver_list.getElementsByClassName("selected");
+        if(receiver_user_selector.length == selected_receiver.length){
+            receiver_list_all_select.textContent = "選択解除";
+        }
+    }
+
+    <% # 個別選択 %>
+    var clickUserSelector = (e) => {
+        var target_selector = e.target;
+        var selector_checkbox = target_selector.getElementsByTagName("input")[0];
+        if(selector_checkbox.checked){ 
+            selector_checkbox.checked = false;
+            target_selector.style.background = "";
+            target_selector.style.color = "white";
+            target_selector.style.fontWeight = "";
+            target_selector.classList.remove("selected");
+            var selected_receiver = receiver_list.getElementsByClassName("selected");
+            if(receiver_user_selector.length != selected_receiver.length){
+                receiver_list_all_select.textContent = "一括選択";
+            }
+        } else {
+            selector_checkbox.checked = true;
+            target_selector.style.background = "white";
+            target_selector.style.color = "black";
+            target_selector.style.fontWeight = "bold";
+            target_selector.classList.add("selected");
+            var selected_receiver = receiver_list.getElementsByClassName("selected");
+            if(receiver_user_selector.length == selected_receiver.length){
+                receiver_list_all_select.textContent = "選択解除";
+            }
+        }
+        var chat_send_list_container = document.getElementById("send-list");
+        var check_user_id = selector_checkbox.value;
+        var user_select_to_check = chat_send_list_container.getElementsByClassName(`user-selector-${check_user_id}`);
+        for(num=0; num < user_select_to_check.length; num++){
+            var user_checkbox = user_select_to_check[num].getElementsByTagName("input")[0];
+            var user_list = user_select_to_check[num].parentNode;
+            var user_list_selectors = user_list.children;
+            var group_div = user_list.previousElementSibling;
+            var group_div_checkbox = group_div.getElementsByTagName("input")[0];
+            var selector_count = 0;
+            if(user_checkbox.checked){
+                user_checkbox.checked = false;
+                user_select_to_check[num].style.color = "white";
+                user_select_to_check[num].style.background = "";
+                user_select_to_check[num].style.fontWeight = "";
+                for(var list_number=0; list_number < user_list_selectors.length;list_number++){
+                    if(user_list_selectors[list_number].getElementsByTagName("input")[0].checked){
+                        selector_count = selector_count -1;
+                    }
+                    if(selector_count <= 0){
+                        group_div_checkbox.checked = false;
+                    }
+                }   
+            } else {
+                user_checkbox.checked = true;
+                user_select_to_check[num].style.color = "black";
+                user_select_to_check[num].style.background = "white";
+                user_select_to_check[num].style.fontWeight = "bold";
+                for(var list_number=0; list_number < user_list_selectors.length;list_number++){
+                    if(user_list_selectors[list_number].getElementsByTagName("input")[0].checked){
+                        selector_count = selector_count +1;
+                    }
+                    if(selector_count >= user_list_selectors.length){
+                        group_div_checkbox.checked = true;
+                    }
+                }
+            }
+        }
+        if(selector_checkbox.checked){
+            var chat_send_user_list = document.getElementById("chat-send-user-list");
+            var send_user_element = document.createElement("li");
+            var send_user_element_text = document.createTextNode(`${event.target.textContent}`);
+            send_user_element.setAttribute("id", `send-selected-user-${check_user_id}`);
+            send_user_element.setAttribute("class", "send-selected-users");
+            send_user_element.appendChild(send_user_element_text);
+            chat_send_user_list.appendChild(send_user_element);
+            var chat_send_form_list = document.getElementById("chat-send-users-form-list");
+            var chat_send_form_element = document.createElement("input");
+            chat_send_form_element.setAttribute("type", "hidden");
+            chat_send_form_element.setAttribute("name", "general_message_send_users[]");
+            chat_send_form_element.setAttribute("id", `chat-send-users-form-${check_user_id}`);
+            chat_send_form_element.value = check_user_id;
+            chat_send_form_list.appendChild(chat_send_form_element);
+        } else {
+            var remove_send_user_element = document.getElementById(`send-selected-user-${check_user_id}`);
+            remove_send_user_element.remove();
+            var remove_send_user_form_element = document.getElementById(`chat-send-users-form-${check_user_id}`);
+            remove_send_user_form_element.remove();
+        }
+    }
+    for(var i=0; i < receiver_user_selector.length; i++){
+        receiver_user_selector[i].addEventListener("click", clickUserSelector);
+    }
+
+    <% # 一括選択 %>
+    receiver_list_all_select.onclick = (e) => {
+        if(e.target.textContent === "一括選択"){
+            e.target.textContent = "選択解除";
+            for(var i=0; i < receiver_user_selector.length; i++){
+                var target = receiver_user_selector[i];
+                var target_checkbox = target.getElementsByTagName("input")[0];
+                if(!target_checkbox.checked){
+                    target.style.background = "white";
+                    target.style.color = "black";
+                    target.style.fontWeight = "bold";
+                    target.classList.add("selected");
+                    target_checkbox.checked = true;
+                    var chat_send_list_container = document.getElementById("send-list");
+                    var check_user_id = target_checkbox.value;
+                    var user_select_to_check = chat_send_list_container.getElementsByClassName(`user-selector-${check_user_id}`);
+                    for(num=0; num < user_select_to_check.length; num++){
+                        var user_checkbox = user_select_to_check[num].getElementsByTagName("input")[0];
+                        var user_list = user_select_to_check[num].parentNode;
+                        var user_list_selectors = user_list.children;
+                        var group_div = user_list.previousElementSibling;
+                        var group_div_checkbox = group_div.getElementsByTagName("input")[0];
+                        var selector_count = 0;
+                        user_checkbox.checked = true;
+                        user_select_to_check[num].style.color = "black";
+                        user_select_to_check[num].style.background = "white";
+                        user_select_to_check[num].style.fontWeight = "bold";
+                        for(var list_number=0; list_number < user_list_selectors.length;list_number++){
+                            if(user_list_selectors[list_number].getElementsByTagName("input")[0].checked){
+                                selector_count = selector_count +1;
+                            }
+                            if(selector_count >= user_list_selectors.length){
+                                group_div_checkbox.checked = true;
+                            }
+                        }
+                    }
+                    var chat_send_user_list = document.getElementById("chat-send-user-list");
+                    var send_user_element = document.createElement("li");
+                    var send_user_element_text = document.createTextNode(`${target.textContent}`);
+                    send_user_element.setAttribute("id", `send-selected-user-${check_user_id}`);
+                    send_user_element.setAttribute("class", "send-selected-users");
+                    send_user_element.appendChild(send_user_element_text);
+                    chat_send_user_list.appendChild(send_user_element);
+                    var chat_send_form_list = document.getElementById("chat-send-users-form-list");
+                    var chat_send_form_element = document.createElement("input");
+                    chat_send_form_element.setAttribute("type", "hidden");
+                    chat_send_form_element.setAttribute("name", "general_message_send_users[]");
+                    chat_send_form_element.setAttribute("id", `chat-send-users-form-${check_user_id}`);
+                    chat_send_form_element.value = check_user_id;
+                    chat_send_form_list.appendChild(chat_send_form_element);
+                }
+            }
+        } else {
+            e.target.textContent = "一括選択";
+            for(var i=0; i < receiver_user_selector.length; i++){
+                var target = receiver_user_selector[i];
+                var target_checkbox = target.getElementsByTagName("input")[0];
+                target.style.background = "";
+                target.style.color = "white";
+                target.style.fontWeight = "";
+                target.classList.remove("selected");
+                target_checkbox.checked = false;
+                var chat_send_list_container = document.getElementById("send-list");
+                var check_user_id = target_checkbox.value;
+                var user_select_to_check = chat_send_list_container.getElementsByClassName(`user-selector-${check_user_id}`);
+                for(num=0; num < user_select_to_check.length; num++){
+                    var user_checkbox = user_select_to_check[num].getElementsByTagName("input")[0];
+                    var user_list = user_select_to_check[num].parentNode;
+                    var user_list_selectors = user_list.children;
+                    var group_div = user_list.previousElementSibling;
+                    var group_div_checkbox = group_div.getElementsByTagName("input")[0];
+                    var selector_count = 0;
+                    user_checkbox.checked = false;
+                    user_select_to_check[num].style.color = "white";
+                    user_select_to_check[num].style.background = "";
+                    user_select_to_check[num].style.fontWeight = "";
+                    for(var list_number=0; list_number < user_list_selectors.length;list_number++){
+                        if(user_list_selectors[list_number].getElementsByTagName("input")[0].checked){
+                            selector_count = selector_count -1;
+                        }
+                        if(selector_count <= 0){
+                            group_div_checkbox.checked = false;
+                        }
+                    }   
+                }
+                var remove_send_user_element = document.getElementById(`send-selected-user-${check_user_id}`);
+                remove_send_user_element.remove();
+                var remove_send_user_form_element = document.getElementById(`chat-send-users-form-${check_user_id}`);
+                remove_send_user_form_element.remove();
+            }
+        }
+    }
+<% end %>

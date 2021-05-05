@@ -1,0 +1,28 @@
+<div id = "user-search-list">
+    <% if @assignment_users.present? %>
+        <h4 id = "group-name"><span id = "user-search-section-back-btn">⬅︎</span> <%= params[:assignment_name] %></h4>
+        <ul id = "user-list" class = "next">
+            <% @assignment_users.each do |user| %>
+                <% if user != current_user %>
+                    <li><%= link_to user.name, user_path(user.public_uid), remote: true %></li>
+                <% end %>
+            <% end %>
+        </ul>
+    <% elsif @group_user_relations.present? %>
+        <h4 id = "group-name">
+            <span id = "user-search-section-back-btn">⬅︎</span> <%= @group.name.truncate(10) %>
+            <% if @group.present? %>
+                <%= link_to contact_group_path(@group.id), method: :delete, remote: true, data: { confirm: "#{@group.name}を削除しますか？" }, id: "group-delete-link" do %><span id = "group-delete-btn"><i class="fas fa-trash"></i></span><% end %>
+            <% end %>
+        </h4>
+        <ul id = "user-list" class = "next">
+            <% @group_user_relations.each do |relation| %>
+                <li><%= link_to relation.user.name, user_path(relation.user.public_uid), remote: true %></li>
+            <% end %>
+        </ul>
+    <% end %>
+</div>
+
+
+
+

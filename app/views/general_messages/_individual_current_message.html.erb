@@ -1,0 +1,10 @@
+<% # ユーザー詳細メッセージ更新用　送信時パーシャル %>
+<div class = "message-content current-user">
+    <span class = "message-user-name">
+        <%= @general_message.user.name %>
+    </span>
+    <p class = "message">
+        <%= safe_join(@general_message.content.split("\n"), tag(:br)) %>
+    </p>
+    <span class = "message-time"><%= l @general_message.created_at %></span>
+</div>

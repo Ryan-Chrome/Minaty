@@ -1,0 +1,46 @@
+<nav>
+    <ul id = "main-menu" class = "side-list">
+        
+        <li id = "current-user-content">
+            <span class = "user-name"><i class="fas fa-user"></i><%= current_user.name %></span>
+            <div id = "attendance-content">
+                <%= render "shared/attendance" %>
+            </div>
+            <%= link_to "マイレポート", management_path(current_user.public_uid), data: {"turbolinks"=>false}, class: "my-report-link" %>
+
+            <%= link_to "有給休暇申請", new_paid_holiday_path, class: "my-report-link" %>
+        </li>
+
+
+        <%= link_to root_path, data: {"turbolinks"=>false} do %>
+            <li>
+                <span><i class="fas fa-home"></i>HOME</span>
+            </li>
+        <% end %>
+        <%= link_to meeting_rooms_path, data: {"turbolinks"=>false} do %>
+            <li>     
+                <span><i class="fas fa-headset"></i>MEETING</span>
+            </li>
+        <% end %>
+        <% if current_user.admin? %>
+            <%= link_to managements_path, data: {"turbolinks"=>false} do %>
+                <li>
+                    <span><i class="fas fa-chalkboard-teacher"></i>MANAGEMENT</span>
+                </li>
+            <% end %>
+        <% end %>
+    
+        <%= link_to destroy_user_session_path, method: :delete do %>
+            <li>
+                <span><i class="fas fa-sign-out-alt"></i>LOGOUT</span>
+            </li>
+        <% end %>
+    </ul>
+</nav>
+
+
+
+
+
+
+

@@ -1,0 +1,21 @@
+<div id = "PasswordNew" class = "user-form">
+
+  <h2>パスワード再設定</h2>
+
+  <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post }) do |f| %>
+
+    <div class="field">
+      <%= f.label :email, "E-mail", style: "#{"color: rgba(192, 26, 26, 0.795);" if @user.errors.include?(:email) }" %>
+      <%= f.email_field :email, autofocus: true, autocomplete: "off", class: "form" %>
+    </div>
+
+    <div class="actions">
+      <%= f.submit "再設定用メール送信" %>
+    </div>
+  <% end %>
+
+  <div class = "links">
+    <%= render "devise/shared/links" %>
+  </div>
+
+</div>

@@ -1,0 +1,22 @@
+<% #グループ削除時用JS %>
+<% if @group.present? %>
+    <% #ユーザーサイドコンテナ グループ詳細 削除 %>
+    user_search_section_back_btn.remove();
+    user_search_section.remove();
+    contact_group_delete_btn.remove();
+    <% #グループ新規作成モーダル　更新 %>
+    var destroy_new_group_select = document.getElementById("contact-group-id-<%= @group.id %>");
+    destroy_new_group_select.remove();
+    <% #チャット送信先設定モーダル 更新 %>
+    var destroy_send_group_select = document.getElementById("send-contact-group-id-<%= @group.id %>");
+    destroy_send_group_select.remove();
+    <% #ユーザーサイドコンテナ 更新 %>
+    var destroy_side_group_select = document.getElementById("side-group-id-<%= @group.id %>");
+    destroy_side_group_select.remove();
+    group_search_section.style.display = "block";
+    <% #削除成功メッセージ %>
+    alert("<%= @group.name %>を削除しました。");
+<% else %>
+    <% #削除失敗メッセージ %>
+    alert("処理に失敗しました。");
+<% end %>

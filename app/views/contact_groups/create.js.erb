@@ -1,0 +1,258 @@
+<% #グループ新規作成（作成完了時）用JS %>
+<% #メッセージ追加&&取得 %>
+var main_form = document.getElementById("new-group-main-form");
+main_form.insertAdjacentHTML("afterbegin", "<%= j(render "shared/modal_message") %>");
+var modal_message_content = document.getElementById("modal-message");
+var modal_message = modal_message_content.getElementsByTagName("h6");
+<% if @contact_group.present? %>
+    <% #グループ新規作成モーダル 新規グループリスト追加 %>
+    var new_add_group_div_element = document.createElement("div");
+    new_add_group_div_element.setAttribute("id", "contact-group-id-<%= @contact_group.id %>");
+    new_add_group_div_element.insertAdjacentHTML("beforeend", "<%= j(render "contact_groups/create_to_new_group") %>");
+    var new_group_user_list = document.getElementById("new-group-user-list");
+    new_group_user_list.appendChild(new_add_group_div_element);
+    <% #チャット送信先設定モーダル 更新 %>
+    var send_add_group_div_element = document.createElement("div");
+    send_add_group_div_element.setAttribute("id", "send-contact-group-id-<%= @contact_group.id %>");
+    send_add_group_div_element.insertAdjacentHTML("beforeend", "<%= j(render "contact_groups/create_to_new_group") %>");
+    var send_group_user_list = document.getElementById("send-list");
+    send_group_user_list.appendChild(send_add_group_div_element);
+    <% #ユーザーサイドコンテナ 更新 %>
+    var user_side_list = document.getElementById("user-list");
+    user_side_list.insertAdjacentHTML("beforeend", "<%= j(render "contact_groups/create_to_side_user") %>");
+    <% #グループ新規作成モーダル 選択リスト関連 %>
+    <% #チャット送信先設定モーダル 選択リスト関連 %>
+    <% #選択リスト リセット %>
+    var new_group_name_form = document.getElementById("contact_group_name");
+    new_group_name_form.value = "";
+    var new_checkbox =  new_group_user_list.getElementsByTagName("input");
+    var send_checkbox = send_group_user_list.getElementsByTagName("input");
+    var new_li_reset = new_group_user_list.getElementsByTagName("li");
+    var send_li_reset = send_group_user_list.getElementsByTagName("li");
+    document.getElementById("chat-send-user-list").innerHTML = "";
+    document.getElementById("chat-send-users-form-list").innerHTML = "";
+    for(var i=0; i < new_checkbox.length;i++){
+        new_checkbox[i].checked = false;
+        send_checkbox[i].checked = false;
+    }
+    for(var i=0; i< new_li_reset.length;i++){
+        new_li_reset[i].style.color = "white";
+        new_li_reset[i].style.backgroundColor = "";
+        new_li_reset[i].style.fontWeight = "";
+        send_li_reset[i].style.color = "white";
+        send_li_reset[i].style.backgroundColor = "";
+        send_li_reset[i].style.fontWeight = "";
+    }
+    <% #リスト展開 %>
+    var new_group_selector = new_add_group_div_element.getElementsByClassName("group-container")[0];
+    var send_group_selector = send_add_group_div_element.getElementsByClassName("group-container")[0];
+    var openList = (event) => {
+        if(!event.target.matches(".group-check")){
+            var user_list = event.target.nextElementSibling;
+            if(user_list.style.display == "block"){
+                user_list.style.display = "none";
+            } else {
+                user_list.style.display = "block";
+            }
+        }
+    }
+    new_group_selector.addEventListener("click", openList);
+    send_group_selector.addEventListener("click", openList);
+    <% #ユーザー個別選択時 %>
+    var new_click_user_selectors = new_add_group_div_element.getElementsByClassName("user-selector");
+    var send_click_user_selectors = send_add_group_div_element.getElementsByClassName("user-selector");
+    var clickUserSelector = (event) => {
+        var chat_send_list_container = document.getElementById("send-list");
+        var event_parent = event.target.parentNode;
+        var event_parent2 = event_parent.parentNode;
+        var container = event_parent2.parentNode;
+
+        var checking_box = event.target.getElementsByTagName("input")[0];
+        var check_user_id = checking_box.value;
+        var user_select_to_check = container.getElementsByClassName(`user-selector-${check_user_id}`);
+        for(num=0; num < user_select_to_check.length;num++){
+            var user_checkbox = user_select_to_check[num].getElementsByTagName("input")[0];
+            var user_list = user_select_to_check[num].parentNode;
+            var user_list_selectors = user_list.children;
+            var group_div = user_list.previousElementSibling;
+            var group_div_checkbox = group_div.getElementsByTagName("input")[0];
+            var selector_count = 0;
+            if(user_checkbox.checked){
+                user_checkbox.checked = false;
+                user_select_to_check[num].style.color = "white";
+                user_select_to_check[num].style.backgroundColor = "";
+                user_select_to_check[num].style.fontWeight = "";
+                for(var list_number=0; list_number < user_list_selectors.length;list_number++){
+                    if(user_list_selectors[list_number].getElementsByTagName("input")[0].checked){
+                        selector_count = selector_count -1;
+                    }
+                    if(selector_count <= 0){
+                        group_div_checkbox.checked = false;
+                    }
+                }
+            } else {
+                user_checkbox.checked = true;
+                user_select_to_check[num].style.color = "black";
+                user_select_to_check[num].style.backgroundColor = "white";
+                user_select_to_check[num].style.fontWeight = "bold";
+                for(var list_number=0; list_number < user_list_selectors.length;list_number++){
+                    if(user_list_selectors[list_number].getElementsByTagName("input")[0].checked){
+                        selector_count = selector_count +1;
+                    } 
+                    if(selector_count >= user_list_selectors.length){
+                        group_div_checkbox.checked = true;
+                    }
+                }
+            }
+        }
+        if(container == chat_send_list_container){
+            if(checking_box.checked){
+                var chat_send_user_list = document.getElementById("chat-send-user-list");
+                var send_user_element = document.createElement("li");
+                var send_user_element_text = document.createTextNode(`${event.target.textContent}`);
+                send_user_element.setAttribute("id", `send-selected-user-${check_user_id}`);
+                send_user_element.setAttribute("class", "send-selected-users");
+                send_user_element.appendChild(send_user_element_text);
+                chat_send_user_list.appendChild(send_user_element);
+                var chat_send_form_list = document.getElementById("chat-send-users-form-list");
+                var chat_send_form_element = document.createElement("input");
+                chat_send_form_element.setAttribute("type", "hidden");
+                chat_send_form_element.setAttribute("name", "general_message_send_users[]");
+                chat_send_form_element.setAttribute("id", `chat-send-users-form-${check_user_id}`);
+                chat_send_form_element.value = check_user_id;
+                chat_send_form_list.appendChild(chat_send_form_element);
+            } else {
+                var remove_send_user_element = document.getElementById(`send-selected-user-${check_user_id}`);
+                remove_send_user_element.remove();
+                var remove_send_user_form_element = document.getElementById(`chat-send-users-form-${check_user_id}`);
+                remove_send_user_form_element.remove();
+            }
+        }
+    }
+    for(i=0; i < new_click_user_selectors.length;i++){
+        new_click_user_selectors[i].addEventListener("click", clickUserSelector);
+        send_click_user_selectors[i].addEventListener("click", clickUserSelector);
+    }
+    <% #一括選択時 %>
+    var new_click_group_checkbox = new_add_group_div_element.getElementsByClassName("group-check")[0];
+    var send_click_group_checkbox = send_add_group_div_element.getElementsByClassName("group-check")[0];
+    var clickGroupCheck = (event) => {
+        var chat_send_list_container = document.getElementById("send-list");
+        var event_parent = event.target.parentNode;
+        var event_parent2 = event_parent.parentNode;
+        var container = event_parent2.parentNode;
+
+        var group_div = event.target.parentNode;
+        var user_list = group_div.nextElementSibling;
+        var user_list_selectors = user_list.children;
+        for(var num=0; num < user_list_selectors.length;num++){
+            var user_checkbox = user_list_selectors[num].getElementsByTagName("input")[0];
+            var check_user_id = user_checkbox.value;
+            var user_select_to_check = container.getElementsByClassName(`user-selector-${check_user_id}`);
+            for(var user_selector_num=0; user_selector_num < user_select_to_check.length;user_selector_num++){
+                var common_user_checkbox = user_select_to_check[user_selector_num].getElementsByTagName("input")[0];
+                var common_user_list = user_select_to_check[user_selector_num].parentNode;
+                var user_selectors = common_user_list.children;
+                var group_div = common_user_list.previousElementSibling;
+                var group_div_checkbox = group_div.getElementsByTagName("input")[0];
+                var selector_count = 0;
+                if(!event.target.checked){
+                    common_user_checkbox.checked = false;
+                    user_select_to_check[user_selector_num].style.color = "white";
+                    user_select_to_check[user_selector_num].style.backgroundColor = "";
+                    user_select_to_check[user_selector_num].style.fontWeight = "";
+                    if(container == chat_send_list_container){
+                        var remove_send_user_element = document.getElementById(`send-selected-user-${check_user_id}`);
+                        if(remove_send_user_element){
+                            remove_send_user_element.remove();
+                            var remove_send_user_form_element = document.getElementById(`chat-send-users-form-${check_user_id}`);
+                            remove_send_user_form_element.remove();
+                        }
+                    }
+                } else {
+                    common_user_checkbox.checked = true;
+                    user_select_to_check[user_selector_num].style.color = "black";
+                    user_select_to_check[user_selector_num].style.backgroundColor = "white";
+                    user_select_to_check[user_selector_num].style.fontWeight = "bold";
+                    if(container == chat_send_list_container){
+                        var add_send_user_element = document.getElementById(`send-selected-user-${check_user_id}`);
+                        if(!add_send_user_element){
+                            var chat_send_user_list = document.getElementById("chat-send-user-list");
+                            var send_user_element = document.createElement("li");
+                            var send_user_element_text = document.createTextNode(`${user_list_selectors[num].textContent}`);
+                            send_user_element.setAttribute("id", `send-selected-user-${check_user_id}`);
+                            send_user_element.setAttribute("class", "send-selected-users");
+                            send_user_element.appendChild(send_user_element_text);
+                            chat_send_user_list.appendChild(send_user_element);
+                            var chat_send_form_list = document.getElementById("chat-send-users-form-list");
+                            var chat_send_form_element = document.createElement("input");
+                            chat_send_form_element.setAttribute("type", "hidden");
+                            chat_send_form_element.setAttribute("name", "general_message_send_users[]");
+                            chat_send_form_element.setAttribute("id", `chat-send-users-form-${check_user_id}`);
+                            chat_send_form_element.value = check_user_id;
+                            chat_send_form_list.appendChild(chat_send_form_element);
+                        }
+                    }
+                }
+                for(var list_number=0; list_number < user_selectors.length;list_number++){
+                    if(!event.target.checked){
+                        if(user_selectors[list_number].getElementsByTagName("input")[0].checked){
+                            selector_count = selector_count -1;
+                        }
+                        if(selector_count <= 0){
+                            group_div_checkbox.checked = false;
+                        }
+                    } else {
+                        if(user_selectors[list_number].getElementsByTagName("input")[0].checked){
+                            selector_count = selector_count +1;
+                        }
+                        if(selector_count >= user_selectors.length){
+                            group_div_checkbox.checked = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    new_click_group_checkbox.addEventListener("click", clickGroupCheck);
+    send_click_group_checkbox.addEventListener("click", clickGroupCheck);
+    <% #メッセージ処理 %>
+    modal_message_content.classList.add("success");
+    modal_message[0].insertAdjacentHTML("afterbegin", "グループを登録しました。");
+<% else %>
+    <% #グループ新規作成失敗時処理 %>
+    modal_message_content.classList.add("error");
+    modal_message[0].insertAdjacentHTML("afterbegin", "処理に失敗しました。");
+<% end %>
+
+var message_clear = () => {
+    modal_message_content.remove();
+}
+var message_countdown = setTimeout(message_clear, 5000);
+var message_delete_btn = document.getElementById("modal-message-delete");
+message_delete_btn.onclick = () => {
+    var modal_message_content = document.getElementById("modal-message");
+    if(modal_message_content){
+        message_clear();
+        clearTimeout(message_countdown);
+    }
+}
+var new_group_container = document.getElementById("new-group");
+var new_group_close_btn = document.getElementById("new-group-close");
+new_group_close_btn.onclick = () => {
+    var modal_message_content = document.getElementById("modal-message");
+    if(modal_message_content){
+        message_clear();
+        clearTimeout(message_countdown);
+    }
+    modal.style.display = "none";
+    new_group_container.style.display = "none";
+}
+var submit = document.getElementById("new-group-submit");
+submit.onclick = () => {
+    var modal_message_content = document.getElementById("modal-message");
+    if(modal_message_content){
+        message_clear();
+        clearTimeout(message_countdown);
+    }
+}

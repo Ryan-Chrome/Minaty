@@ -1,0 +1,17 @@
+var chat_send_users_list = document.getElementById("chat-send-user-list");
+var chat_area = document.getElementById("chat-text-area");
+if(chat_send_users_list.children.length != 0){
+    if(chat_area.value){
+        chat_area.value = "";
+    }
+}
+
+<% if @current_user_send_message.present? %>
+    var chat_content = document.getElementById("chat-content");
+    chat_content.insertAdjacentHTML("beforeend", "<%= j(render "general_messages/current_user_message") %>");
+    chat_content.scrollTop = chat_content.scrollHeight;
+<% else %>
+    alert("送信先もしくは内容に不備があります。");
+<% end %>
+
+

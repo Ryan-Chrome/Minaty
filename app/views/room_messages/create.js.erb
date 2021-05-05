@@ -1,0 +1,10 @@
+var room_message_area = document.getElementById("room-message-textarea");
+<% if @room_message.present? && @room_message.valid? %>
+if(room_message_area.value){
+    room_message_area.value = "";
+}
+<% elsif @room_message.present? %>
+    alert("<%= @room_message.errors.full_messages.first %>");
+<% else %>
+    alert("不正な操作がされました。");
+<% end %>

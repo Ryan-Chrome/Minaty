@@ -1,0 +1,217 @@
+<% if @meeting_room.present? && @meeting_room.finish_at > DateTime.now %>
+    var setting_video = document.getElementById("my-video");
+    if(setting_video.srcObject){
+        (async function room_join(){
+            <% # DOM取得 %>
+            const myVideo = document.getElementById("my-video");
+
+            <% # 設定画面削除&ルーム表示 %>
+            var room_setting_div = document.getElementById("meeting-room");
+            room_setting_div.innerHTML = "<%= j(render "meeting_rooms/room_show") %>";
+            const otherVideo = document.getElementById("room-container");
+            var my_video_content = document.getElementById("my-video-content");
+            my_video_content.appendChild(myVideo);
+            const localStream = myVideo.srcObject;
+
+            <% # デバイス変更サイドコンテンツ %>
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            var device_config_form = document.getElementById("device-config-form");
+            device_config_form.innerHTML = "<%= j(render "meeting_rooms/device_change_form") %>";
+            var video_change = document.getElementById("video-change");
+            var audio_change = document.getElementById("audio-change");
+            for(var i=0; i < devices.length;i++){
+                if(devices[i].kind == "videoinput"){
+                    let option = document.createElement("option");
+                    option.setAttribute("value", devices[i].deviceId);
+                    option.innerHTML = devices[i].label;
+                    video_change.appendChild(option);
+                } else if(devices[i].kind == "audioinput"){
+                    let option = document.createElement("option");
+                    option.setAttribute("value", devices[i].deviceId);
+                    option.innerHTML = devices[i].label;
+                    audio_change.appendChild(option);
+                }
+            }
+
+            <% #ビデオ・マイク設定 %>
+            var audio_btn = document.getElementById("audio-mute");
+            var audio_no_btn = document.getElementById("audio-no-mute");
+            var video_btn = document.getElementById("video-mute");
+            var video_no_btn = document.getElementById("video-no-mute");
+
+            if(audio_btn.style.display == "block"){
+                localStream.getAudioTracks().forEach((track) => (track.enabled = false));
+            }
+            if(video_btn.style.display == "block"){
+                localStream.getVideoTracks().forEach((track) => (track.enabled = false));
+            }
+
+            audio_no_btn.onclick = () => {
+                audio_no_btn.style.display = "none";
+                audio_btn.style.display = "block";
+                localStream.getAudioTracks().forEach((track) => (track.enabled = false));
+            }
+            audio_btn.onclick = () => {
+                audio_no_btn.style.display = "block";
+                audio_btn.style.display = "none";
+                localStream.getAudioTracks().forEach((track) => (track.enabled = true));
+            }
+            video_no_btn.onclick = () => {
+                video_no_btn.style.display = "none";
+                video_btn.style.display = "block";
+                localStream.getVideoTracks().forEach((track) => (track.enabled = false));
+            }
+            video_btn.onclick = () => {
+                video_no_btn.style.display = "block";
+                video_btn.style.display = "none";
+                localStream.getVideoTracks().forEach((track) => (track.enabled = true));
+            }
+            
+            
+            <% # ルーム接続 %>
+            const room = peer.joinRoom("<%= @meeting_room.public_uid %>", {
+                mode: "sfu",
+                stream: localStream
+            });
+
+            <% # ルーム接続成功時 %>
+            room.once("open", () => {
+                console.log("<%= current_user.name %>");
+                var user_status = document.getElementById("user-status-<%= current_user.public_uid %>");
+                user_status.style.color = "green";
+            });
+
+            <% # 他人接続時 %>
+            room.on("peerJoin", peerId => {
+                console.log(`${peerId} join`);
+            });
+
+            <% # streamに変更時処理 要素作成 %>
+            room.on("stream", async stream => {
+                <% # ビデオ作成 %>
+                const newVideoDiv = document.createElement("div");
+                newVideoDiv.setAttribute("class", "video other-video");
+                const newVideo = document.createElement("video");
+                newVideo.srcObject = stream;
+                newVideo.playInline = true;
+                newVideo.setAttribute("id", `video-${stream.peerId}`);
+                newVideoDiv.appendChild(newVideo);
+                otherVideo.appendChild(newVideoDiv);
+                <% # ビデオネームElm作成 %>
+                var otherUserNameElm = document.createElement("span")
+                otherUserNameElm.setAttribute("class", "video-user-name");
+                otherUserNameElm.setAttribute("id", `user-name-id-${stream.peerId}`);
+                await newVideoDiv.appendChild(otherUserNameElm);
+                <% #　ユーザーID、ユーザーネーム送信 %>
+                room.send(["<%= current_user.name %>", "<%= current_user.public_uid %>"]);
+                <% # ビデオレイアウト変更 %>
+                var other_videos = document.getElementsByClassName("other-video");
+                var member = other_videos.length + 1;
+                var n = Math.sqrt(member);
+                if(member === 2){
+                    other_videos[0].style.width = "50%";
+                    other_videos[0].style.height = "50%";
+                } else if(Number.isInteger(n)){
+                    my_video_content.style.width = 100 / n + "%";
+                    my_video_content.style.height = 100 / n + "%";
+                    for(var i=0; i < other_videos.length;i++){
+                        other_videos[i].style.width = 100 / n + "%";
+                        other_videos[i].style.height = 100 / n + "%";
+                    }
+                } else {
+                    my_video_content.style.width = 100 / Math.ceil(n) + "%";
+                    my_video_content.style.height = 100 / Math.round(n) + "%";
+                    for(var i=0; i < other_videos.length;i++){
+                        other_videos[i].style.width = 100 / Math.ceil(n) + "%";
+                        other_videos[i].style.height = 100 / Math.round(n) + "%";
+                    }
+                }
+                <% # ビデオ再生 %>
+                newVideo.play().catch(console.error);
+            });
+
+            <% # stream変更時、対象ユーザーの名前取得&要素作成 %>
+            room.on("data", ({ data, src }) => {
+                <% # ビデオユーザー名取得 %>
+                var other_user_name = document.getElementById(`user-name-id-${src}`);
+                other_user_name.textContent = data[0];
+                <% # ユーザースタッツ情報更新 %>
+                var other_user_status = document.getElementById(`user-status-${data[1]}`);
+                other_user_status.style.color = "green";
+                <% # ユーザーリスト データ情報更新 %>
+                var user_list = other_user_status.parentNode;
+                user_list.setAttribute("id", `${src}`);
+            });
+
+            <% # 他ユーザーが退出時、対象ビデオ削除 %>
+            room.on("peerLeave", peerId => {
+                <% # ユーザースタッツ取得＆更新 %>
+                var user_list = document.getElementById(`${peerId}`);
+                var other_user_status = user_list.getElementsByClassName("user-status")[0];
+                other_user_status.style.color = "red";
+                <% # ビデオ取得＆更新 %>
+                let remote_video = document.getElementById(`video-${peerId}`);
+                let remoteVideo = remote_video.parentNode;
+                remote_video.srcObject.getTracks().forEach(track => track.stop());
+                remote_video.srcObject = null;
+                remoteVideo.remove();
+                <% # ビデオレイアウト変更 %>
+                var other_videos = document.getElementsByClassName("other-video");
+                var member = other_videos.length + 1;
+                var n = Math.sqrt(member);
+                if(member === 2){
+                    other_videos[0].style.width = "50%";
+                    other_videos[0].style.height = "50%";
+                } else if(Number.isInteger(n) && member != 1){
+                    my_video_content.style.width = 100 / n + "%";
+                    my_video_content.style.height = 100 / n + "%";
+                    for(var i=0; i < other_videos.length;i++){
+                        other_videos[i].style.width = 100 / n + "%";
+                        other_videos[i].style.height = 100 / n + "%";
+                    }
+                } else if(member != 1) {
+                    my_video_content.style.width = 100 / Math.ceil(n) + "%";
+                    my_video_content.style.height = 100 / Math.round(n) + "%";
+                    for(var i=0; i < other_videos.length;i++){
+                        other_videos[i].style.width = 100 / Math.ceil(n) + "%";
+                        other_videos[i].style.height = 100 / Math.round(n) + "%";
+                    }
+                }
+            });
+
+            <% # ストリーム変更 %>
+            var device_config_done_btn = document.getElementById("device-change-btn");
+            device_config_done_btn.onclick = () => {
+                if(video_change.value != "" && audio_change.value != "" && video_change.value != "display"){
+                    let changeStream = navigator.mediaDevices.getUserMedia({
+                        audio: {deviceId: audio_change.value},
+                        video: {deviceId: video_change.value}
+                    }).then((stream)=> {
+                        room.replaceStream(stream);
+                        myVideo.muted = true;
+                        myVideo.srcObject = stream;
+                        myVideo.playsInline = true;
+                        myVideo.play().catch(console.error);
+                    });
+                } else if (video_change.value == "display" && audio_change.value != ""){
+                    let changeStream = navigator.mediaDevices.getDisplayMedia({
+                        audio: {deviceId: audio_change.value},
+                        video: true
+                    }).then((stream)=> {
+                        room.replaceStream(stream);
+                        myVideo.muted = true;
+                        myVideo.srcObject = stream;
+                        myVideo.playsInline = true;
+                        myVideo.play().catch(console.error);
+                    });
+                }
+            }
+
+            peer.on("error", console.error);
+        })();
+    } else {
+        var preview_span = document.getElementById("preview-span");
+        preview_span.textContent = "出力の設定をしてください。";
+    }
+
+<% end %>

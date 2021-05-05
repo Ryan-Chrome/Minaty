@@ -1,0 +1,10 @@
+ja:
+  time:
+    formats: 
+      default: "%m月%d日 %H:%M"
+  activerecord:
+    models:
+      room_message: ルームメッセージ
+    attributes:
+      room_message:
+        content: メッセージ

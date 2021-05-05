@@ -1,0 +1,18 @@
+var user_content_chat_area = document.getElementById("user-content-chat-text-area");
+
+if(user_content_chat_area.value){
+    user_content_chat_area.value = "";
+}
+
+<% if @current_user_send_message.present? %>
+    var chat_content = document.getElementById("chat-content");
+    chat_content.insertAdjacentHTML("beforeend", "<%= j(render "general_messages/current_user_message") %>");
+    chat_content.scrollTop = chat_content.scrollHeight;
+    var chat_log = document.getElementById("chat-log");
+    if(chat_log){
+        chat_log.insertAdjacentHTML("beforeend", "<%= j(render "general_messages/individual_current_message") %>");
+        chat_log.scrollTop = chat_log.scrollHeight;
+    }
+<% else %>
+    alert("送信内容に不備があります。");
+<% end %>

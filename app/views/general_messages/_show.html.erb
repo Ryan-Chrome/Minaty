@@ -1,0 +1,19 @@
+<div id = message-receivers-container>
+    <div class = "modal-top-bar">
+        <ul>
+            <li class = "topbar-header">送信先一覧</li>
+            <li id = "message-receivers-close" class = "topbar-close-btn"><span>＋</span></li>
+        </ul>
+    </div>
+    <div id = "message-receivers-list">
+        <ul>
+            <% @receive_users.each do |user| %>
+                <li class = "receiver-selector-<%= user.public_uid %> receiver-selector">
+                    <%= user.name %>
+                    <input type="checkbox" value = "<%= user.public_uid %>">
+                </li>
+            <% end %>
+        </ul>
+    </div>
+    <button id = "receiver-list-all-select">一括選択</button>
+</div>

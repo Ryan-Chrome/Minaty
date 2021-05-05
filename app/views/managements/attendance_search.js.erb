@@ -1,0 +1,4 @@
+var attendance_table = document.getElementById("attendance-table");
+var table = attendance_table.getElementsByClassName("table")[0]
+table.remove();
+attendance_table.insertAdjacentHTML("beforeend", "<%= j(render "attendance_table") %>");

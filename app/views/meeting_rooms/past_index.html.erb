@@ -1,0 +1,48 @@
+<div id = "common-container">
+    <div id = "side-menu">
+        <%= render "homes/side_menu" %>
+    </div>
+    <div id = "rooms-menu">
+        <span id = "head">過去のルーム一覧</span>
+        <div id = "menu-search-box">
+            <%= form_with url: meeting_rooms_past_index_path, local: true, method: :get do |f| %>
+                <%= f.label :name, "内容検索" %>
+                <%= f.text_field :name %>
+
+                <%= f.label :date, "日付検索" %>
+                <%= f.date_field :date %>
+
+                <%= f.submit "検索", id: "button" %>
+            <% end %>
+        </div>
+        <%= link_to "新規作成", new_meeting_room_path, id: "new-room-link", data: {"trubolinks"=>false} %>
+        <%= link_to "参加予定一覧へ", meeting_rooms_path, id: "rooms-link", data: {"turbolinks"=>false} %>
+    </div>
+    <div id = "rooms-container">
+        <% if @past_rooms.present? %>
+            <ul>
+                <% room_date = "foo" %>
+                <% @past_rooms.each do |room| %>
+                    <% if room_date != room.start_at.strftime("%m月%d日") %>
+                        <% room_date = room.start_at.strftime("%m月%d日") %>
+                        <li class = "room-date-head"><%= room_date %></li>
+                    <% end %>
+                    <li class = "room-content">
+                        <span class = "room-status" style = "background: red;">終了</span>
+                        <span class = "room-name"><%= room.name %></span>
+                        <span class = "room-time"><%= room.start_at.strftime("%m月%d日") %> <%= "#{room.start_at.strftime("%H:%M")}~#{room.finish_at.strftime("%H:%M")}" %></span>
+                        <span class = "room-users-toggle">参加ユーザー <i class="fas fa-chevron-down"></i></span>
+                        <div class = "room-users">
+                            <% room.users.each do |user| %>
+                                <span><%= user.name %></span>
+                            <% end %>
+                        </div>
+                        <%= link_to "ルームへ", meeting_room_path(room.public_uid), data: {"turbolinks"=>false}, class: "room-link" %>
+                    </li>
+                <% end %>
+            </ul>
+        <% else %>
+            <span id = "no-rooms">該当するルームが存在しません</span>
+        <% end %>
+    </div>
+</div>

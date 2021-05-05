@@ -1,0 +1,373 @@
+<div id = "common-container">
+    <div id = "side-menu">
+        <%= render "homes/side_menu" %>
+    </div>
+    <div id = "management-top">
+        <% if current_user.admin? %>
+            <%= render "menu_links" %>
+        <% end %>
+        <div id = "user-container" style = "<%= "height: 100%;" unless current_user.admin? %>">
+            <div id = "left-container">
+                <div id = "user-details">
+                    <div id = "details-content">
+                        <h1><i class="fas fa-columns"></i> ダッシュボード</h1>
+
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td class = "head">ユーザー名</td>
+                                    <td><%= @user.name %></td>
+                                </tr>
+                                <tr>
+                                    <td class = "head">フリガナ</td>
+                                    <td><%= @user.kana %></td>
+                                </tr>
+                                <tr>
+                                    <td class = "head">所属</td>
+                                    <td><%= @user.department %></td>
+                                </tr>
+                                <tr>
+                                    <td class = "head">メール</td>
+                                    <td><%= @user.email %></td>
+                                </tr>
+                                <tr>
+                                    <td class = "head">勤怠状態</td>
+                                    <% if @paid_holiday.present? %>
+                                        <td><i class="fas fa-circle" style = "color: rgb(221, 137, 68);"></i> 有給休暇</td>
+                                    <% elsif @status.present? %>
+                                        <% if @status.left_at.present? %>
+                                            <td><i class="fas fa-circle" style = "color: rgb(50, 124, 194);"></i> 退勤済</td>
+                                        <% else %>
+                                            <td><i class="fas fa-circle" style = "color: rgb(75, 201, 75);"></i> 勤務中</td>
+                                        <% end %>
+                                    <% else %>
+                                        <td><i class="fas fa-circle" style = "color: rgb(194, 110, 110);"></i> 出勤前</td>
+                                    <% end %>
+                                </tr>
+                                <tr>
+                                    <td class = "head">権限</td>
+                                    <% if @user.admin? %>
+                                        <td>管理ユーザー</td>
+                                    <% else %>
+                                        <td>一般ユーザー</td>
+                                    <% end %>
+                                <tr>
+                                </tr>
+                                <tr>
+                                    <td class = "head">最終ログイン</td>
+                                    <td>2021/04/21 12:00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <% if current_user.admin? %>
+                            <span class = "user-edit-btn"><%= link_to "ユーザー設定", edit_other_user_registration_path %></span>
+                        <% end %>
+                    </div>
+                    <div id = "commuting-container">
+                        <h1 class = "calendar-head"><i class="far fa-calendar-alt"></i> カレンダー</h1>
+                        <div id = "calendar-btn">
+                            <button id = "prev"><i class="fas fa-chevron-up"></i>前</button>
+                            <button id = "today"><i class="fas fa-redo-alt"></i></button>
+                            <button id = "next">次<i class="fas fa-chevron-down"></i></button>
+                        </div>
+                        <div id = "calendar"></div>
+                    </div>
+                </div>
+                <div id = "schedule-date">
+                    <h5>スケジュールグラフ</h5>
+                    <div class = "schedule">
+                        <h6>累計</h6>
+                        <% n = 0 %>
+                        <div
+                            class = "curcle"
+                            style = "background: 
+                                conic-gradient(
+                                    <% @total_schedule_parsents.each do |parsent| %>
+                                        <%= "#{@paret[n]} 0, #{@paret[n]} #{parsent[1]}," %>
+                                        <% n += 1 %>
+                                    <% end %>
+                                    #1abc9c 0
+                                )
+                            ;"
+                        >
+                            <span class = "graph-center">スケジュール<br>比率(%)</span>
+                        </div>
+                        <div class = "schedule-details">
+                            <ul class = "schedule-list">
+                                <% n = 0 %>
+                                <% total_parsent = 0 %>
+                                <% @total_schedule_parsents.each do |schedule| %>
+                                    <li>
+                                        <span class = "schedule-color" style = "background: <%= @paret[n] %>;"></span>
+                                        <%= schedule[0] %>: <%= "#{(schedule[1].to_i - total_parsent).to_s}% (#{@total_circle_schedule_list[n][1]}時間)" %>
+                                    </li>
+                                    <% total_parsent = schedule[1].to_i %>
+                                    <% n += 1 %>
+                                <% end %>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class = "schedule">
+                        <h6>月間</h6>
+                        <% n = 0 %>
+                        <div
+                            class = "curcle"
+                            style = "background: 
+                                conic-gradient(
+                                    <% @month_schedule_parsents.each do |parsent| %>
+                                        <%= "#{@paret[n]} 0, #{@paret[n]} #{parsent[1]}," %>
+                                        <% n += 1 %>
+                                    <% end %>
+                                    #1abc9c 0
+                                )
+                            ;"
+                        >
+                            <span class = "graph-center">スケジュール<br>比率(%)</span>
+                        </div>
+                        <div class = "schedule-details">
+                            <ul class = "schedule-list">
+                                <% n = 0 %>
+                                <% total_parsent = 0 %>
+                                <% @month_schedule_parsents.each do |schedule| %>
+                                    <li>
+                                        <span class = "schedule-color" style = "background: <%= @paret[n] %>;"></span>
+                                        <%= schedule[0] %>: <%= "#{(schedule[1].to_i - total_parsent).to_s}% (#{@month_circle_schedule_list[n][1]}時間)" %>
+                                    </li>
+                                    <% total_parsent = schedule[1].to_i %>
+                                    <% n += 1 %>
+                                <% end %>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class = "schedule">
+                        <h6>週間</h6>
+                        <% n = 0 %>
+                        <div
+                            class = "curcle"
+                            style = "background: 
+                                conic-gradient(
+                                    <% @week_schedule_parsents.each do |parsent| %>
+                                        <%= "#{@paret[n]} 0, #{@paret[n]} #{parsent[1]}," %>
+                                        <% n += 1 %>
+                                    <% end %>
+                                    #1abc9c 0
+                                )
+                            ;"
+                        >
+                            <span class = "graph-center">スケジュール<br>比率(%)</span>
+                        </div>
+                        <div class = "schedule-details">
+                            <ul class = "schedule-list">
+                                <% n = 0 %>
+                                <% total_parsent = 0 %>
+                                <% @week_schedule_parsents.each do |schedule| %>
+                                    <li>
+                                        <span class = "schedule-color" style = "background: <%= @paret[n] %>;"></span>
+                                        <%= schedule[0] %>: <%= "#{(schedule[1].to_i - total_parsent).to_s}% (#{@week_circle_schedule_list[n][1]}時間)" %>
+                                    </li>
+                                    <% total_parsent = schedule[1].to_i %>
+                                    <% n += 1 %>
+                                <% end %>
+                            </ul>
+                        </div>
+                    </div>
+                    <div id = "total-work-container">
+                        <div>合計時間: <%= @total_work_time %>時間</div>
+                        <div>合計時間: <%= @month_work_time %>時間</div>
+                        <div>合計時間: <%= @week_work_time %>時間</div>
+                    </div>
+                </div>
+                <div id = "meeting-history">
+                    <h6>
+                        ミーティング履歴
+                        <span>直近8件を表示</span>
+                    </h6>
+                    <% if @meeting_historys.present? %>
+                        <ul id = "history-list">
+                            <% @meeting_historys.each do |meeting| %>
+                                <li>
+                                    <%= meeting.start_at.strftime("%m月%d日") %>　
+                                    <%= "#{meeting.start_at.strftime("%H:%M")}~#{meeting.finish_at.strftime("%H:%M")}" %>　
+                                    <%= "#{meeting.name}に参加しました。" %>
+                                    <span class = "meeting-people">
+                                        <%= "参加人数#{meeting.users.count}名" %>
+                                    </span>
+                                    <span class = "meeting-time">
+                                        <%= "( #{(meeting.finish_at - meeting.start_at) / 3600}時間 )" %>
+                                    </span>
+                                </li>
+                            <% end %>
+                        </ul>
+                    <% else %>
+                        <span class = "not-meeting-historys">履歴がありません</span>
+                    <% end %>
+                </div>
+            </div>
+            <div id = "right-container">
+                <h3><i class="far fa-calendar-alt"></i> 日別スケジュール</h3>
+                <div class = "data-form">
+                    <%= form_with url: schedules_date_change_path, method: :get do |f|  %>
+                        <%= f.hidden_field :user_id, value: @user.public_uid %>
+                        <%= f.date_field :management_schedule_date, value: Date.today %>
+                        <%= f.submit "移動", class: "btn" %>
+                    <% end %>
+                </div>
+                <div id = "schedule-container">
+                    <%= render "schedules/show" %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+
+    var weeks = ["日", "月", "火", "水", "木", "金", "土"];
+    var date = new Date();
+    var year = date.getFullYear();
+    var month = date.getMonth() + 1;
+    var today = `${year}` + `${month}` + `${date.getDate()}`;
+    var arr = <%= @stamp %>;
+    var paid_arr = <%= @paid_stamp %>;
+
+    function showCalendar(year, month){
+        var calendarHtml = createCalendar(year, month);
+        document.querySelector('#calendar').innerHTML = calendarHtml;
+    }
+
+    function createCalendar(year, month){
+        var startDate = new Date(year, month - 1, 1);
+        var endDate = new Date(year, month, 0);
+        var endDayCount = endDate.getDate();
+        var lastMonthEndDate = new Date(year, month -1, 0);
+        var lastMonthEndDayCount = lastMonthEndDate.getDate();
+        var startDay = startDate.getDay();
+        var dayCount = 1;
+        var calendarHtml = "";
+
+        calendarHtml += "<h1>" + "<span>" + year + "年" + month + "月" + "</span>" + "</h1>";
+        calendarHtml += "<table>";
+
+        for(var i=0; i < weeks.length; i++){
+            calendarHtml += "<td class = head>" + weeks[i] + "</td>";
+        }
+
+        for(var w=0; w < 6; w++){
+            calendarHtml += "<tr>";
+            for(var d=0; d < 7; d++){
+                var day = `${year}` + `${month}` + `${dayCount}`;
+                if(w == 0 && d < startDay){
+                    var num = lastMonthEndDayCount - startDay + d + 1;
+                    if(month === 1){
+                        var disabled_today = `${year - 1}` + `12` + `${num}`;
+                    } else {
+                        var disabled_today = `${year}` + `${month - 1}` + `${num}`;
+                    }
+                    if(arr.includes(Number(disabled_today))){
+                        if(today === disabled_today){
+                            calendarHtml += `<td class = "is-disabled today on">` + num + `</td>`;
+                        } else {
+                            calendarHtml += `<td class = "is-disabled on">` + num + `</td>`;
+                        }
+                    } else if(paid_arr.includes(Number(disabled_today))) {
+                        if(today === disabled_today){
+                            calendarHtml += `<td class = "is-disabled today paid">` + num + `</td>`;
+                        } else {
+                            calendarHtml += `<td class = "is-disabled paid">` + num + `</td>`;
+                        }
+                    }else {
+                        if(today === disabled_today){
+                            calendarHtml += `<td class = "is-disabled today off">` + num + `</td>`;
+                        } else {
+                            calendarHtml += `<td class = "is-disabled off">` + num + `</td>`;
+                        }
+                    }
+                } else if(dayCount > endDayCount) {
+                    var num = dayCount - endDayCount;
+                    if(month === 12){
+                        var disabled_today = `${year + 1}` + `${1}` + `${num}`;
+                    } else {
+                        var disabled_today = `${year}` + `${month + 1}` + `${num}`;
+                    }
+                    if(arr.includes(Number(disabled_today))){
+                        if(today === disabled_today){
+                            calendarHtml += `<td class = "is-disabled today on">` + num + `</td>`;
+                        } else {
+                            calendarHtml += `<td class = "is-disabled on">` + num + `</td>`;
+                        }
+                    } else if(paid_arr.includes(Number(disabled_today))) {
+                        if(today === disabled_today){
+                            calendarHtml += `<td class = "is-disabled today paid">` + num + `</td>`;
+                        } else {
+                            calendarHtml += `<td class = "is-disabled paid">` + num + `</td>`;
+                        }
+                    } else {
+                        if(today === disabled_today){
+                            calendarHtml += `<td class = "is-disabled today off">` + num + `</td>`;
+                        } else {
+                            calendarHtml += `<td class = "is-disabled off">` + num + `</td>`;
+                        }
+                    }
+                    dayCount++
+                } else {
+                    if(arr.includes(Number(day))){
+                        if(today === day){
+                            calendarHtml += `<td class = "today on">` + dayCount + `</td>`;
+                        } else {
+                            calendarHtml += `<td class = "on">` + dayCount + `</td>`;
+                        }
+                    } else if(paid_arr.includes(Number(day))) {
+                        if(today === day){
+                            calendarHtml += `<td class = "today paid">` + dayCount + `</td>`;
+                        } else {
+                            calendarHtml += `<td class = "paid">` + dayCount + `</td>`;
+                        }
+                    } else {
+                        if(today === day){
+                            calendarHtml += `<td class = "today off">` + dayCount + `</td>`;
+                        } else {
+                            calendarHtml += `<td class = "off">` + dayCount + `</td>`;
+                        }
+                    }
+                    dayCount++
+                }
+            }
+            calendarHtml += "</tr>";
+        }
+        calendarHtml += "</table>";
+
+        return calendarHtml;
+    }
+
+    function moveCalendar(e){
+        document.querySelector("#calendar").innerHTML = "";
+        if(e.target.id === "prev"){
+            month--
+            if(month < 1){
+                year--
+                month = 12;
+            }
+        }
+
+        if(e.target.id === "next"){
+            month++
+            if(month > 12){
+                year++
+                month = 1;
+            }
+        }
+
+        if(e.target.id === "today"){
+            year = date.getFullYear();
+            month = date.getMonth() + 1;
+        }
+
+        showCalendar(year, month);
+    }
+
+    document.querySelector("#prev").addEventListener("click", moveCalendar);
+    document.querySelector("#next").addEventListener("click", moveCalendar);
+    document.querySelector("#today").addEventListener("click", moveCalendar);
+
+    showCalendar(year, month);
+</script>

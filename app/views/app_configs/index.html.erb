@@ -1,0 +1,37 @@
+<div id = "common-container">
+    <div id = "side-menu">
+        <%= render "homes/side_menu" %>
+    </div>
+    <div id = "management-top">
+        <%= render "managements/menu_links" %>
+        <div id = "app-config-container">
+            <h1><i class="fas fa-cog"></i> アプリ設定</h1>
+            <div id = "app-config-form">
+                <div>
+                    <label>アプリ名</label>
+                    <input type="text">
+                </div>
+            
+                <label>部署設定</label>
+                <span id = "list-head">設定中部署リスト</span>
+                <ul id = "department-list">
+                    <li>人事部</li>
+                    <li>営業部</li>
+                    <li>開発部</li>
+                </ul>
+
+                <div id = "department-form">
+                    <input type="text">
+                    <button class = "btn">追加</button>
+                </div>
+
+                <div>
+                    <label>管理者パスワード</label>
+                    <input type="text">
+                </div>
+
+                <button class = "btn">変更</button>
+            </div>
+        </div>
+    </div>
+</div>
