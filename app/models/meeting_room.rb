@@ -12,6 +12,7 @@ class MeetingRoom < ApplicationRecord
 
     # MeetingRoomモデル　バリデーション
     validates :name, presence: true, length: { maximum: 15 }
+    validates :comment, length: { maximum: 400 }
     validates :start_at, presence: true
     validates :finish_at, presence: true
     validates :meeting_date, presence: true

@@ -46,6 +46,11 @@ RSpec.describe MeetingRoom, type: :model do
             expect(FactoryBot.build(:meeting_room, room_entry_users: "")).not_to be_valid
         end
 
+        # コメントが400字以上の場合
+        it "is invalid comment" do
+            expect(FactoryBot.build(:meeting_room, comment: "#{"a" * 401}")).not_to be_valid
+        end
+
     end
 
     # アソシエーション関連
