@@ -2524,14 +2524,20 @@ header {
                 position: relative;
             }
         }
+        #new-room-container {
+            @include object-center();
+        }
         #meeting-lobby {
             width: 95%;
-            height: calc(100% - 80px);
+            height: calc(100% - 90px);
             margin: auto;
             flex-wrap: wrap;
-            border-radius: 10px;
+            border-radius: 0 0 3px 3px;
             box-sizing: border-box;
             z-index: 2;
+            background: white;
+            padding: 0 15px 10px 15px;
+            max-width: 1600px;
             #meeting-new-form {
                 width: 100%;
                 height: 100%;
@@ -2541,6 +2547,10 @@ header {
                         border: 2px solid rgb(126, 39, 39) !important;
                     }
                     select {
+                        background: rgb(240, 190, 190);
+                        border: 2px solid rgb(126, 39, 39) !important;
+                    }
+                    textarea {
                         background: rgb(240, 190, 190);
                         border: 2px solid rgb(126, 39, 39) !important;
                     }
@@ -2559,21 +2569,19 @@ header {
                     .form-container {
                         width: calc(100% - 20px);
                         height: 100%;
-                        padding: 5% 0;
+                        padding: 8% 0 5% 0;
                         box-sizing: border-box;
                         border: 1px solid white;
                         border-radius: 10px;
+                        background: rgb(51, 51, 51);
                         .form-field {
-                            height: auto;
                             width: 80%;
                             margin: auto; 
-                            height: 20%;
+                            height: 18%;
                             position: relative;  
                             .form-inner {
                                 width: 100%;
-                                position: absolute;
-                                top: 50%;
-                                transform: translate(0, -50%);
+                                
                             }
                             label {
                                 font-size: 14px;
@@ -2590,7 +2598,6 @@ header {
                                 margin: auto;
                                 border-radius:320px;
                                 font-size: 14px;
-                                font-weight: bold;
                                 padding: 5px 10px 4px 10px;
                                 outline: none;
                                 border: 2px solid $gray;
@@ -2598,6 +2605,13 @@ header {
                                 &:focus {
                                     border: 2px solid $btn-blue;
                                 }
+                            }
+                            textarea {
+                                width: 100%;
+                                box-sizing: border-box;
+                                border-radius: 5px;
+                                resize: none;
+                                height: 100px;
                             }
                         }
                         .check-box-field {
@@ -2610,13 +2624,11 @@ header {
                         }
                         .meeting-time-form {
                             font-size: 14px;
-                            color: white;
-                            font-weight: bold;
+                            color: black;
                             select {
                                 width: calc(50% - 7px);
                                 height: 30px;
                                 padding: 1px 10px;
-                                font-weight: bold;
                                 box-sizing: border-box;
                                 border: 2px solid $gray;
                                 border-radius: 100px;
@@ -2627,7 +2639,7 @@ header {
                             }
                         }
                         .submit {
-                            width: 100%;
+                            width: 80%;
                             background: $btn-blue;
                             color: white;
                             display: block;
@@ -2635,9 +2647,7 @@ header {
                             border: none;
                             border-radius: 5px;
                             line-height: 30px;
-                            position: absolute;
-                            top: 50%;
-                            transform: translate(0, -50%);
+                            
                         }
                     }
                 }
@@ -2647,13 +2657,14 @@ header {
                         display: inline-block;
                         width: calc(50% - 10px);
                         height: 100%;
-                        border: 1px solid white;
                         border-radius: 10px;
                         margin-right: 20px;
                         box-sizing: border-box;
+                        background: rgb(51, 51, 51);
                         h6 {
                             height: 26px;
                             padding-top: 8px;
+                            padding-bottom: 8px;
                             box-sizing: border-box;
                             font-size: 14px;
                             text-align: center;
@@ -2714,7 +2725,7 @@ header {
                         display: inline-block;
                         width: calc(50% - 10px);
                         height: 100%;
-                        border: 1px solid white;
+                        background: rgb(51, 51, 51);
                         border-radius: 10px;
                         box-sizing: border-box;
                         h6 {
@@ -2768,41 +2779,68 @@ header {
         #rooms-menu {
             width: 95%;
             max-width: 1600px;
-            height: 40px;
-            margin: 15px auto;
+            height: 115px;
+            margin: 15px auto 0px auto;
             background: white;
-            border-radius: 5px;
             position: relative;
-            #head {
-                position: absolute;
-                left: 0; 
-                color: white;
-                font-size: 16px;
-                line-height: 40px;
+            padding-top: 10px;
+            border-radius: 3px 3px 0 0;
+            a {
+                text-decoration: none;
+            }
+            #rooms-link {
+                display: inline-block;
+                color: gray;
+                font-size: 15px;
                 text-align: center;
-                width: 160px;
-                background:  #a48c61;
-                border-radius: 5px 0 0 5px;
+                padding: 5px 7px;
+                margin-right: 30px;
+                margin-left: 30px;
+                font-weight: bold;
+                border-bottom: 5px solid gray;
+            }
+            #new-room-link {
+                display: inline-block;
+                border-bottom: 5px solid gray;
+                font-size: 15px;
+                color: gray;
+                padding: 5px 7px;
+                text-align: center;
+                margin-left: 30px;
+                font-weight: bold;
+            }
+            #past-rooms-link {
+                display: inline-block;
+                border-bottom: 5px solid gray;
+                font-size: 15px;
+                color: gray;
+                padding: 5px 7px;
+                text-align: center;
+                font-weight: bold;
             }
             #menu-search-box {
-                display: inline-block;
-                position: absolute;
-                left: 160px;
-                width: calc(100% - 460px);
-                height: 40px;
-                padding: 0 15px;
+                width: 95%;
+                display: block;
+                height: 50px;
+                padding: 5px 15px;
                 box-sizing: border-box;
+                margin: auto;
+                margin-top: 20px;
+                background: rgb(230, 230, 230);
+                border-radius: 3px;
                 label {
                     display: inline-block;
                     font-size: 15px;
                     color: black;
                     line-height: 40px;
                     text-align: center;
-                    width: 10%;
+                    width: 100px;
                 }
                 input {
-                    width: 32%;
                     box-sizing: border-box;
+                }
+                #name {
+                    width: 200px;
                 }
                 #button {
                     width: 10%;
@@ -2810,132 +2848,122 @@ header {
                     box-sizing: border-box;
                 }
             }
-            #new-room-link {
-                position: absolute;
-                right: 150px;
-                width: 150px;
-                line-height: 40px;
-                text-decoration: none;
-                font-size: 15px;
-                color: white;
-                background: #a48c61;
-                text-align: center;
-            }
-            #rooms-link {
-                position: absolute;
-                right: 0;
-                width: 150px;
-                line-height: 40px;
-                text-decoration: none;
-                font-size: 15px;
-                color: white;
-                background: rgb(72, 140, 218);
-                border-radius: 0 5px 5px 0;
-                text-align: center;
-            }
         }
         #rooms-container {
             width: 95%;
             max-width: 1600px;
-            height: calc(100% - 80px);
+            height: calc(100% - 155px);
             margin: auto;
-            border-radius: 5px;
-            position: relative;
+            background: white;
+            border-radius: 0 0 3px 3px;
             #no-rooms {
                 @include object-center();
-                color: white;
+                color: gray;
                 font-size: 18px;
             }
             ul {
                 height: 100%;
+                width: 100%;
                 padding: 10px 0;
                 box-sizing: border-box;
                 overflow: auto;
+                margin: auto;
                 .room-date-head {
-                    width: 100%;
-                    padding-left: 5px;
-                    margin: 0 auto 10px auto;
+                    width: 95%;
+                    padding-left: 15px;
+                    margin: 20px auto 5px auto;
                     font-size: 18px;
-                    color: white;
-                    border-bottom: 2px solid white;
+                    color: rgb(80, 80, 80);
+                    font-weight: bold;
+                    border-bottom: 2px solid rgb(80, 80, 80);
                     box-sizing: border-box;
+                    &:first-child {
+                        margin-top: 0;
+                    }
                 }
                 .room-content {
-                    width: 100%;
-                    line-height: 50px;
+                    width: 95%;
                     margin: 0 auto 10px auto;
-                    border: 1px solid white;
-                    border-radius: 5px;
-                    color: white;
-                    font-size: 18px;
+                    padding: 10px 0;
+                    color: black;
                     position: relative;
                     box-sizing: border-box;
+                    font-size: 14px;
                     .room-status {
-                        font-size: 15px;
-                        background: green;
+                        font-size: 13px;
                         color: white;
-                        line-height: 50px;
-                        width: 100px;
+                        line-height: 35px;
+                        width: 70px;
                         display: inline-block;
-                        vertical-align: top;
                         text-align: center;
-                        border-radius: 5px 0 0 5px;
-                    }
-                    .room-name {
-                        margin-left: 15px;
+                        vertical-align: top;
                     }
                     .room-time {
-                        position: absolute;
-                        right: 270px;
-                        top: 50%;
-                        transform: translate(0, -50%); 
-                    }
-                    .room-users-toggle {
-                        position: absolute;
-                        right: 100px;
+                        display: inline-block;
+                        line-height: 35px;
                         width: 150px;
                         text-align: center;
-                        background: #a48c61;
+                        background: rgb(150, 150, 150);
+                        text-decoration: none;
                         color: white;
-                        font-size: 15px;
-                        cursor: pointer;
-                        &:hover + .room-users {
-                            display: inline-block;
-                        }
-                    }
-                    .room-users {
-                        display: none;
-                        position: absolute;
-                        top: 50px;
-                        right: 100px;
-                        width: 150px;
-                        text-align: center;
-                        background: rgb(207, 207, 207);
-                        z-index: 2;
-                        padding: 5px;
-                        box-sizing: border-box;
-                        border-radius: 0 0 5px 5px;
-                        span {
-                            color: black;
-                            display: block;
-                            font-size: 14px;
-                            line-height: 30px;
-                            border-bottom: 1px solid;
-                            width: 98%;
-                            margin-bottom: 5px;
-                        }
+                        font-size: 13px;
+                        vertical-align: top;
                     }
                     .room-link {
-                        position: absolute;
-                        right: 0;
-                        height: 50px;
+                        display: inline-block;
+                        line-height: 35px;
                         width: 100px;
                         text-align: center;
                         background: rgb(72, 140, 218);
                         text-decoration: none;
                         color: white;
-                        border-radius: 0 5px 5px 0;
-                        font-size: 15px;
+                        font-size: 13px;
+                        vertical-align: top;
+                    }
+                    .room-details {
+                        display: block;
+                        padding: 10px;
+                        box-sizing: border-box;
+                        background: rgb(230, 230, 230);
+                        border-radius: 0 3px 3px 3px;
+                        .room-comment {
+                            font-size: 14px;
+                            padding: 0 10px;
+                            p {
+                                margin-top: 10px;
+                                margin-bottom: 20px;
+                                font-size: 13px;
+                            }
+                        }
+                        .room-users {
+                            .room-users-h {
+                                display: inline-block;
+                                font-size: 14px;
+                                padding-left: 5px;
+                                margin-bottom: 0;
+                            }
+                            div {
+                                font-size: 13px;
+                                margin-top: 2px;
+                                border-top: 1px solid rgb(61, 61, 61);
+                                padding: 7px 5px 0 5px;
+                            }
+                        }
+                        span {
+                            color: black;
+                            display: inline;
+                            font-size: 12px;
+                            margin-bottom: 5px;
+                        }
+                        .room-name {
+                            font-size: 16px;
+                            display: block;
+                            color: rgb(0, 0, 0);
+                            padding: 0 5px 2px 5px;
+                            box-sizing: border-box;
+                            margin-bottom: 5px;
+                            border-bottom: 1px solid rgb(61, 61, 61);
+                        }
                     }
                 }
             }

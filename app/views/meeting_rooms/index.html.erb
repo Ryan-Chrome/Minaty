@@ -3,7 +3,9 @@
         <%= render "homes/side_menu" %>
     </div>
     <div id = "rooms-menu">
-        <span id = "head">ルーム一覧</span>
+        <span id = "rooms-link" style = "border-bottom: 5px solid #2196f3;">ルーム一覧</span>
+        <%= link_to "過去ルーム一覧", meeting_rooms_past_index_path, id: "past-rooms-link", date: {"turbolinks"=>false} %>
+        <%= link_to "新規作成", new_meeting_room_path, id: "new-room-link", data: {"trubolinks"=>false} %>
         <div id = "menu-search-box">
             <%= form_with url: meeting_rooms_path, local: true, method: :get do |f| %>
                 <%= f.label :name, "内容検索" %>
@@ -15,8 +17,6 @@
                 <%= f.submit "検索", id: "button" %>
             <% end %>
         </div>
-        <%= link_to "新規作成", new_meeting_room_path, id: "new-room-link", data: {"trubolinks"=>false} %>
-        <%= link_to "過去ルーム一覧へ", meeting_rooms_past_index_path, id: "rooms-link", date: {"turbolinks"=>false} %>
     </div>
     <div id = "rooms-container">
         <% if @after_entry_rooms.present? %>
@@ -33,15 +33,28 @@
                         <% elsif room.start_at > DateTime.now %>
                             <span class = "room-status" style = "background: green;">待機中</span>
                         <% end %>
-                        <span class = "room-name"><%= room.name %></span>
                         <span class = "room-time"><%= room.start_at.strftime("%m月%d日") %> <%= "#{room.start_at.strftime("%H:%M")}~#{room.finish_at.strftime("%H:%M")}" %></span>
-                        <span class = "room-users-toggle">参加ユーザー <i class="fas fa-chevron-down"></i></span>
-                        <div class = "room-users">
-                            <% room.users.each do |user| %>
-                                <span><%= user.name %></span>
-                            <% end %>
-                        </div>
                         <%= link_to "ルームへ", meeting_room_path(room.public_uid), data: {"turbolinks"=>false}, class: "room-link" %>
+                        <div class = "room-details">
+                            <span class = "room-name">・<%= room.name %></span>
+                            <div class = "room-comment">
+                                <p>
+                                    <% if room.comment.present? %>
+                                        <%= safe_join(room.comment.split("\n"), tag(:br)) %>
+                                    <% else %>
+                                        コメントなし
+                                    <% end %>
+                                </p>
+                            </div>
+                            <div class = "room-users">
+                                <span class = "room-users-h">参加ユーザー</span>
+                                <div>
+                                    <% room.users.each do |user| %>
+                                        <span>・<%= user.name %></span>
+                                    <% end %>
+                                </div>
+                            </div>
+                        </div>
                     </li>
                 <% end %>
             </ul>

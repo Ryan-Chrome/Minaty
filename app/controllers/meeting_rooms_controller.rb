@@ -121,6 +121,7 @@ class MeetingRoomsController < ApplicationController
 
         @meeting_room = MeetingRoom.new(
             name: params[:meeting_room][:name],
+            comment: params[:meeting_room][:comment],
             start_at: meeting_start_time,
             finish_at: meeting_end_time,
             meeting_date: room_date,
@@ -132,13 +133,25 @@ class MeetingRoomsController < ApplicationController
             start_time = @meeting_room.start_at.strftime("%H:%M")
             end_time = @meeting_room.finish_at.strftime("%H:%M")
 
-            @general_message = current_user.general_messages.create(
-                content: "ミーティングルームを予約しました。
-                議題: #{@meeting_room.name}
-                日付: #{@meeting_room.start_at.strftime("%m月%d日")}
-                時間: #{start_time} ~ #{end_time}",
-                room_id: @meeting_room.public_uid
-            )
+            if @meeting_room.comment.present?
+                @general_message = current_user.general_messages.create(
+                    content: "ミーティングルームを予約しました。
+                    議題: #{@meeting_room.name}
+                    日付: #{@meeting_room.start_at.strftime("%m月%d日")}
+                    時間: #{start_time} ~ #{end_time}
+                    コメント:
+                    #{@meeting_room.comment}",
+                    room_id: @meeting_room.public_uid
+                )
+            else
+                @general_message = current_user.general_messages.create(
+                    content: "ミーティングルームを予約しました。
+                    議題: #{@meeting_room.name}
+                    日付: #{@meeting_room.start_at.strftime("%m月%d日")}
+                    時間: #{start_time} ~ #{end_time}",
+                    room_id: @meeting_room.public_uid
+                )
+            end
 
             @meeting_room.entries.create(user_id: current_user.id)
             entries.each do |user|

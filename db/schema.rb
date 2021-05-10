@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_05_03_020249) do
+ActiveRecord::Schema.define(version: 2021_05_08_092402) do
 
   create_table "attendances", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "arrived_at"
@@ -79,6 +79,7 @@ ActiveRecord::Schema.define(version: 2021_05_03_020249) do
     t.datetime "start_at"
     t.datetime "finish_at"
     t.string "public_uid"
+    t.text "comment"
     t.index ["public_uid"], name: "index_meeting_rooms_on_public_uid", unique: true
   end
 
