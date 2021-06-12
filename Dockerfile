@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y curl apt-transport-https wget && \
 
 
 
-RUN curl -sL https://deb.nodesource.com/setup_7.x | bash - && \
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
     apt-get install nodejs
 
 RUN apt update && apt install -y locales locales-all

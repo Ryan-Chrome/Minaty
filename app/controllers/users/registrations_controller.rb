@@ -5,29 +5,38 @@ class Users::RegistrationsController < Devise::RegistrationsController
   # before_action :configure_account_update_params, only: [:update]
   prepend_before_action :require_no_authentication, :only => [:cancel]
   prepend_before_action :authenticate_scope!, :only => [:destroy, :new, :create, :edit, :update]
-  # 管理ユーザー以外はリダイレクト
-  before_action :current_user_admin?, only:[:new, :create, :edit, :update, :destroy]
+
+  # 管理ユーザー以外はルートへリダイレクト
+  before_action :current_user_admin?, only: [:new, :create, :edit, :update, :destroy]
+
+  # 勤怠情報取得
+  before_action :get_sidebar_attendance, only: [:new, :edit]
 
   # GET /resource/sign_up
   def new
-    super
+    @departments = Department.where.not(name: "未設定")
+    @department_select = []
+    @departments.each do |department|
+      @department_select << [department.name, department.id]
+    end
+    build_resource
+    yield resource if block_given?
+    respond_with resource
   end
 
   # POST /resource
   def create
+    @departments = Department.where.not(name: "未設定")
+    @department_select = []
+    @departments.each do |department|
+      @department_select << [department.name, department.id]
+    end
     build_resource(sign_up_params)
     resource.save
     yield resource if block_given?
     if resource.persisted?
-      if resource.active_for_authentication?
-        set_flash_message! :notice, :signed_up
-        sign_up(resource_name, current_user)
-        redirect_to managements_path
-      else
-        set_flash_message! :notice, :"signed_up_but_#{resource.inactive_message}"
-        expire_data_after_sign_in!
-        redirect_to management_user_new_path
-      end
+      set_flash_message! :notice, :signed_up
+      redirect_to users_path
     else
       clean_up_passwords resource
       set_minimum_password_length
@@ -40,6 +49,11 @@ class Users::RegistrationsController < Devise::RegistrationsController
     @user = User.find_by(public_uid: params[:id])
     if @user.present?
       self.resource = resource_class.to_adapter.get!(@user.id)
+      @departments = Department.where.not(name: "未設定")
+      @department_select = []
+      @departments.each do |department|
+        @department_select << [department.name, department.id]
+      end
     else
       redirect_to root_path
     end
@@ -58,25 +72,40 @@ class Users::RegistrationsController < Devise::RegistrationsController
 
       respond_with resource, location: after_update_path_for(resource)
     else
+      @departments = Department.where.not(name: "未設定")
+      @department_select = []
+      @departments.each do |department|
+        @department_select << [department.name, department.id]
+      end
       clean_up_passwords resource
       set_minimum_password_length
-      respond_with resource
+      render :edit
     end
   end
 
   # DELETE /resource
   def destroy
-    if destroy_admin_password_valid?(params[:current_password])
-      user = User.find_by(public_uid: params[:id])
-      user.destroy
-      if current_user == user
-        Devise.sign_out_all_scopes ? sign_out : sign_out(current_user)
-        redirect_to new_user_session_path
+    @user = User.find_by(public_uid: params[:id])
+    if @user
+      if destroy_admin_password_valid?(params[:current_password])
+        @user.destroy
+        if current_user == @user
+          Devise.sign_out_all_scopes ? sign_out : sign_out(current_user)
+          redirect_to new_user_session_path
+        else
+          redirect_to users_path
+        end
       else
-        redirect_to managements_path
+        @departments = Department.where.not(name: "未設定")
+        @department_select = []
+        @departments.each do |department|
+          @department_select << [department.name, department.id]
+        end
+        flash.now[:alert] = "管理者パスワードが不正です"
+        render :edit
       end
     else
-      render :edit
+      redirect_to root_path
     end
   end
 
@@ -97,7 +126,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
     end
 
     def after_update_path_for(resource)
-      management_path(@user.public_uid)
+      user_path(@user.public_uid)
     end
 
     def destroy_admin_password_valid?(password)

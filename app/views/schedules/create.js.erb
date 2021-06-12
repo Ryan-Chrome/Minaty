@@ -4,214 +4,214 @@ var main_form = document.getElementById("add-schedule-next-main");
 main_form.insertAdjacentHTML("afterbegin", "<%= j(render "shared/modal_message") %>");
 var modal_message_content = document.getElementById("modal-message");
 var modal_message = modal_message_content.getElementsByTagName("h6");
-<% if @schedules.present? %>
-    <% #スケジュール作成モーダル スケジュール更新 %>
-    var create_schedule_form_sub = document.getElementById("add-schedule-next-sub");
-    create_schedule_form_sub.innerHTML = "<%= j(render "schedules/new_sub") %>";
-    <% #スケジュール編集項目選択モーダル スケジュール更新 %>
-    var edit_schedule_select_sub = document.getElementById("edit-schedule-sub");
-    edit_schedule_select_sub.innerHTML = "<%= j(render "schedules/edit_schedule_sub") %>";
-    <% #ホームスケジュール更新 %>
-    var home_schedule = document.getElementById("schedule-content");
-    home_schedule.innerHTML = "<%= j(render "schedules/show") %>";
-    <% #ホームスケジュール&スケジュール編集項目選択モーダル&スケジュール作成日程選択モーダル 日付更新 %>
-    var schedule_data_form = document.getElementsByClassName("data-text");
-    for(var i=0; i < schedule_data_form.length; i++){
-        schedule_data_form[i].value = "<%= @new_schedule_date %>";
+<% if @work_length.present? %>
+  <% #スケジュール作成モーダル スケジュール更新 %>
+  var create_schedule_form_sub = document.getElementById("add-schedule-next-sub");
+  create_schedule_form_sub.innerHTML = "<%= j(render "schedules/new_sub") %>";
+  <% #スケジュール編集項目選択モーダル スケジュール更新 %>
+  var edit_schedule_select_sub = document.getElementById("edit-schedule-sub");
+  edit_schedule_select_sub.innerHTML = "<%= j(render "schedules/edit_schedule_sub") %>";
+  <% #ホームスケジュール更新 %>
+  var home_schedule = document.getElementById("schedule-content");
+  home_schedule.innerHTML = "<%= j(render "schedules/show") %>";
+  <% #ホームスケジュール&スケジュール編集項目選択モーダル&スケジュール作成日程選択モーダル 日付更新 %>
+  var schedule_data_form = document.getElementsByClassName("data-text");
+  for(var i=0; i < schedule_data_form.length; i++){
+    schedule_data_form[i].value = "<%= @new_schedule_date %>";
+  }
+  <% #スケジュール編集項目選択モーダル スケジュールBOX関連 %>
+  var number = Number("<%= @schedules.length %>");
+  for(var i=0; i < number; i++){
+    var schedule = document.getElementsByClassName(`edit-schedule-${i}`);
+    for(var s=0; s < schedule.length; s++){
+      if(i%2 == 0){
+        schedule[s].style.backgroundColor = "rgba(29, 29, 29, 0.9)";
+      } else {
+        schedule[s].style.backgroundColor = "rgba(37, 76, 109, 0.9)";
+      }
     }
-    <% #スケジュール編集項目選択モーダル スケジュールBOX関連 %>
-    var number = Number("<%= @schedules.length %>");
-    for(var i=0; i < number; i++){
+  }
+  <% #スケジュール編集項目選択モーダル表示ボタン更新 %>
+  var edit_schedule_content = document.getElementById("edit-schedule");
+  var edit_schedule_modal_btn = document.getElementById("edit-schedule-btn");
+  edit_schedule_modal_btn.classList.remove("done");
+  edit_schedule_modal_btn.onclick = () => {
+    modal.style.display = "block";
+    edit_schedule_content.style.display = "block";
+    if(!edit_schedule_modal_btn.classList.contains("done")){
+      edit_schedule_modal_btn.classList.add("done");
+      for(var i=0; i < number; i++){
         var schedule = document.getElementsByClassName(`edit-schedule-${i}`);
-        for(var s=0; s < schedule.length; s++){
-            if(i%2 == 0){
-                schedule[s].style.backgroundColor = "rgba(29, 29, 29, 0.9)";
-            } else {
-                schedule[s].style.backgroundColor = "rgba(37, 76, 109, 0.9)";
-            }
-        }
-    }
-    <% #スケジュール編集項目選択モーダル表示ボタン更新 %>
-    var edit_schedule_content = document.getElementById("edit-schedule");
-    var edit_schedule_modal_btn = document.getElementById("edit-schedule-btn");
-    edit_schedule_modal_btn.classList.remove("done");
-    edit_schedule_modal_btn.onclick = () => {
-        modal.style.display = "block";
-        edit_schedule_content.style.display = "block";
-        if(!edit_schedule_modal_btn.classList.contains("done")){
-            edit_schedule_modal_btn.classList.add("done");
-            for(var i=0; i < number; i++){
-                var schedule = document.getElementsByClassName(`edit-schedule-${i}`);
-                var schedule_height = 0;
-                for(var s=0; s < schedule.length; s++){
-                    schedule_height += schedule[s].offsetHeight;
-                }
-                if(schedule_height < 40){
-                    var schedule_time = document.getElementById(`edit-time-${i}`);
-                    var schedule_name = document.getElementById(`edit-schedule-name-${i}`);
-                    schedule_time.style.display = "none";
-                    schedule_name.style.display = "none";
-                    for(var s=0; s < schedule.length; s++){
-                        schedule[s].classList.add("edit-need-details");
-                        if(s === 0){
-                            var schedule_details_element = document.createElement("p");
-                            schedule_details_element.setAttribute("id", `edit-schedule-details-${i}`);
-                            schedule_details_element.setAttribute("class", `edit-schedule-details`);
-                            var schedule_details_text_1 = document.createTextNode(`${schedule_name.textContent}`);
-                            var schedule_details_text_2 = document.createElement("br");
-                            var schedule_details_text_3 = document.createTextNode(`${schedule_time.textContent}`);
-                            schedule_details_element.appendChild(schedule_details_text_1);
-                            schedule_details_element.appendChild(schedule_details_text_2);
-                            schedule_details_element.appendChild(schedule_details_text_3);
-                            schedule[0].appendChild(schedule_details_element);
-                        }
-                        schedule[s].addEventListener("mouseover", (event) => {
-                            var schedule_number = (event.target.classList[0].replace(/[^0-9]/g, ''));
-                            var schedule_details = document.getElementById(`edit-schedule-details-${schedule_number}`);
-                            schedule_details.style.display = "block";
-                        }, false);
-                        schedule[s].addEventListener("mouseleave", (event) => {
-                            var schedule_number = (event.target.classList[0].replace(/[^0-9]/g, ''));
-                            var schedule_details = document.getElementById(`edit-schedule-details-${schedule_number}`);
-                            schedule_details.style.display = "none";
-                        }, false);
-                    }
-                }
-            }
-        }
-    }
-    <% #スケジュール作成モーダル スケジュールBOX関連 %>
-    for(var i=0; i < number; i++){
-        var schedule = document.getElementsByClassName(`add-schedule-${i}`);
         var schedule_height = 0;
         for(var s=0; s < schedule.length; s++){
-            if(i%2 == 0){
-                schedule[s].style.backgroundColor = "rgba(29, 29, 29, 0.9)";
-            } else {
-                schedule[s].style.backgroundColor = "rgba(37, 76, 109, 0.9)";
-            }
-            schedule_height += schedule[s].offsetHeight;
+          schedule_height += schedule[s].offsetHeight;
         }
         if(schedule_height < 40){
-            var schedule_time = document.getElementById(`add-schedule-time-${i}`);
-            var schedule_name = document.getElementById(`add-schedule-name-${i}`);
-            schedule_time.style.display = "none";
-            schedule_name.style.display = "none";
-            for(var s=0; s < schedule.length; s++){
-                schedule[s].classList.add("add-need-details");
-                if(s === 0){
-                    var schedule_details_element = document.createElement("p");
-                    schedule_details_element.setAttribute("id", `add-schedule-details-${i}`);
-                    schedule_details_element.setAttribute("class", `add-schedule-details`);
-                    var schedule_details_text_1 = document.createTextNode(`${schedule_name.textContent}`);
-                    var schedule_details_text_2 = document.createElement("br");
-                    var schedule_details_text_3 = document.createTextNode(`${schedule_time.textContent}`);
-                    schedule_details_element.appendChild(schedule_details_text_1);
-                    schedule_details_element.appendChild(schedule_details_text_2);
-                    schedule_details_element.appendChild(schedule_details_text_3);
-                    schedule[0].appendChild(schedule_details_element);
-                }
-                schedule[s].addEventListener("mouseover", (event) => {
-                    var schedule_number = (event.target.classList[0].replace(/[^0-9]/g, ''));
-                    var schedule_details = document.getElementById(`add-schedule-details-${schedule_number}`);
-                    schedule_details.style.display = "block";
-                }, false);
-                schedule[s].addEventListener("mouseleave", (event) => {
-                    var schedule_number = (event.target.classList[0].replace(/[^0-9]/g, ''));
-                    var schedule_details = document.getElementById(`add-schedule-details-${schedule_number}`);
-                    schedule_details.style.display = "none";
-                }, false);
+          var schedule_time = document.getElementById(`edit-time-${i}`);
+          var schedule_name = document.getElementById(`edit-schedule-name-${i}`);
+          schedule_time.style.display = "none";
+          schedule_name.style.display = "none";
+          for(var s=0; s < schedule.length; s++){
+            schedule[s].classList.add("edit-need-details");
+            if(s === 0){
+              var schedule_details_element = document.createElement("p");
+              schedule_details_element.setAttribute("id", `edit-schedule-details-${i}`);
+              schedule_details_element.setAttribute("class", `edit-schedule-details`);
+              var schedule_details_text_1 = document.createTextNode(`${schedule_name.textContent}`);
+              var schedule_details_text_2 = document.createElement("br");
+              var schedule_details_text_3 = document.createTextNode(`${schedule_time.textContent}`);
+              schedule_details_element.appendChild(schedule_details_text_1);
+              schedule_details_element.appendChild(schedule_details_text_2);
+              schedule_details_element.appendChild(schedule_details_text_3);
+              schedule[0].appendChild(schedule_details_element);
             }
+            schedule[s].addEventListener("mouseover", (event) => {
+              var schedule_number = (event.target.classList[0].replace(/[^0-9]/g, ''));
+              var schedule_details = document.getElementById(`edit-schedule-details-${schedule_number}`);
+              schedule_details.style.display = "block";
+            }, false);
+            schedule[s].addEventListener("mouseleave", (event) => {
+              var schedule_number = (event.target.classList[0].replace(/[^0-9]/g, ''));
+              var schedule_details = document.getElementById(`edit-schedule-details-${schedule_number}`);
+              schedule_details.style.display = "none";
+            }, false);
+          }
         }
+      }
     }
-    <% #ホームスケジュール スケジュールBOX関連 %>
-    for(var i=0; i < number; i++){
-        var schedule = document.getElementsByClassName(`box-${i}`);
-        var schedule_height = 0;
-        for(var s=0; s < schedule.length; s++){
-            if(i%2 == 0){
-                schedule[s].style.backgroundColor = "rgba(29, 29, 29, 0.9)";
-            } else {
-                schedule[s].style.backgroundColor = "rgba(37, 76, 109, 0.9)";
-            }
-            schedule_height += schedule[s].offsetHeight;
-        }
-        if(schedule_height < 40){
-            var schedule_time = document.getElementById(`time-${i}`);
-            var schedule_name = document.getElementById(`schedule-name-${i}`);
-            schedule_time.style.display = "none";
-            schedule_name.style.display = "none";
-            for(var s=0; s < schedule.length; s++){
-                schedule[s].classList.add("need-details");
-                if(s === 0){
-                    var schedule_details_element = document.createElement("p");
-                    schedule_details_element.setAttribute("id", `schedule-details-${i}`);
-                    schedule_details_element.setAttribute("class", `schedule-details`);
-                    var schedule_details_text_1 = document.createTextNode(`${schedule_name.textContent}`);
-                    var schedule_details_text_2 = document.createElement("br");
-                    var schedule_details_text_3 = document.createTextNode(`${schedule_time.textContent}`);
-                    schedule_details_element.appendChild(schedule_details_text_1);
-                    schedule_details_element.appendChild(schedule_details_text_2);
-                    schedule_details_element.appendChild(schedule_details_text_3);
-                    schedule[0].appendChild(schedule_details_element);
-                }
-                schedule[s].addEventListener("mouseover", (event) => {
-                    var schedule_number = (event.target.classList[0].replace(/[^0-9]/g, ''));
-                    var schedule_details = document.getElementById(`schedule-details-${schedule_number}`);
-                    schedule_details.style.display = "block";
-                }, false);
-                schedule[s].addEventListener("mouseleave", (event) => {
-                    var schedule_number = (event.target.classList[0].replace(/[^0-9]/g, ''));
-                    var schedule_details = document.getElementById(`schedule-details-${schedule_number}`);
-                    schedule_details.style.display = "none";
-                }, false);
-            }
-        }
+  }
+  <% #スケジュール作成モーダル スケジュールBOX関連 %>
+  for(var i=0; i < number; i++){
+    var schedule = document.getElementsByClassName(`add-schedule-${i}`);
+    var schedule_height = 0;
+    for(var s=0; s < schedule.length; s++){
+      if(i%2 == 0){
+        schedule[s].style.backgroundColor = "rgba(29, 29, 29, 0.9)";
+      } else {
+        schedule[s].style.backgroundColor = "rgba(37, 76, 109, 0.9)";
+      }
+      schedule_height += schedule[s].offsetHeight;
     }
-    <% #メッセージ成功処理 %>
-    modal_message_content.classList.add("success");
-    modal_message[0].insertAdjacentHTML("afterbegin", "スケジュールを追加しました。");
+    if(schedule_height < 40){
+      var schedule_time = document.getElementById(`add-schedule-time-${i}`);
+      var schedule_name = document.getElementById(`add-schedule-name-${i}`);
+      schedule_time.style.display = "none";
+      schedule_name.style.display = "none";
+      for(var s=0; s < schedule.length; s++){
+        schedule[s].classList.add("add-need-details");
+        if(s === 0){
+          var schedule_details_element = document.createElement("p");
+          schedule_details_element.setAttribute("id", `add-schedule-details-${i}`);
+          schedule_details_element.setAttribute("class", `add-schedule-details`);
+          var schedule_details_text_1 = document.createTextNode(`${schedule_name.textContent}`);
+          var schedule_details_text_2 = document.createElement("br");
+          var schedule_details_text_3 = document.createTextNode(`${schedule_time.textContent}`);
+          schedule_details_element.appendChild(schedule_details_text_1);
+          schedule_details_element.appendChild(schedule_details_text_2);
+          schedule_details_element.appendChild(schedule_details_text_3);
+          schedule[0].appendChild(schedule_details_element);
+        }
+        schedule[s].addEventListener("mouseover", (event) => {
+          var schedule_number = (event.target.classList[0].replace(/[^0-9]/g, ''));
+          var schedule_details = document.getElementById(`add-schedule-details-${schedule_number}`);
+          schedule_details.style.display = "block";
+        }, false);
+        schedule[s].addEventListener("mouseleave", (event) => {
+          var schedule_number = (event.target.classList[0].replace(/[^0-9]/g, ''));
+          var schedule_details = document.getElementById(`add-schedule-details-${schedule_number}`);
+          schedule_details.style.display = "none";
+        }, false);
+      }
+    }
+  }
+  <% #ホームスケジュール スケジュールBOX関連 %>
+  for(var i=0; i < number; i++){
+    var schedule = document.getElementsByClassName(`box-${i}`);
+    var schedule_height = 0;
+    for(var s=0; s < schedule.length; s++){
+      if(i%2 == 0){
+        schedule[s].style.backgroundColor = "rgba(29, 29, 29, 0.9)";
+      } else {
+        schedule[s].style.backgroundColor = "rgba(37, 76, 109, 0.9)";
+      }
+      schedule_height += schedule[s].offsetHeight;
+    }
+    if(schedule_height < 40){
+      var schedule_time = document.getElementById(`time-${i}`);
+      var schedule_name = document.getElementById(`schedule-name-${i}`);
+      schedule_time.style.display = "none";
+      schedule_name.style.display = "none";
+      for(var s=0; s < schedule.length; s++){
+        schedule[s].classList.add("need-details");
+        if(s === 0){
+          var schedule_details_element = document.createElement("p");
+          schedule_details_element.setAttribute("id", `schedule-details-${i}`);
+          schedule_details_element.setAttribute("class", `schedule-details`);
+          var schedule_details_text_1 = document.createTextNode(`${schedule_name.textContent}`);
+          var schedule_details_text_2 = document.createElement("br");
+          var schedule_details_text_3 = document.createTextNode(`${schedule_time.textContent}`);
+          schedule_details_element.appendChild(schedule_details_text_1);
+          schedule_details_element.appendChild(schedule_details_text_2);
+          schedule_details_element.appendChild(schedule_details_text_3);
+          schedule[0].appendChild(schedule_details_element);
+        }
+        schedule[s].addEventListener("mouseover", (event) => {
+          var schedule_number = (event.target.classList[0].replace(/[^0-9]/g, ''));
+          var schedule_details = document.getElementById(`schedule-details-${schedule_number}`);
+          schedule_details.style.display = "block";
+        }, false);
+        schedule[s].addEventListener("mouseleave", (event) => {
+          var schedule_number = (event.target.classList[0].replace(/[^0-9]/g, ''));
+          var schedule_details = document.getElementById(`schedule-details-${schedule_number}`);
+          schedule_details.style.display = "none";
+        }, false);
+      }
+    }
+  }
+  <% #メッセージ成功処理 %>
+  modal_message_content.classList.add("success");
+  modal_message[0].insertAdjacentHTML("afterbegin", "スケジュールを追加しました。");
 <% else %>
-    <% #メッセージ失敗処理 %>
-    modal_message_content.classList.add("error");
-    modal_message[0].insertAdjacentHTML("afterbegin", "処理に失敗しました。");
+  <% #メッセージ失敗処理 %>
+  modal_message_content.classList.add("error");
+  modal_message[0].insertAdjacentHTML("afterbegin", "処理に失敗しました。");
 <% end %>
 
 var message_clear = () => {
-    modal_message_content.remove();
+  modal_message_content.remove();
 }
 var message_countdown = setTimeout(message_clear, 5000);
 var message_delete_btn = document.getElementById("modal-message-delete");
 message_delete_btn.onclick = () => {
-    var modal_message_content = document.getElementById("modal-message");
-    if(modal_message_content){
-        message_clear();
-        clearTimeout(message_countdown);
-    }
+  var modal_message_content = document.getElementById("modal-message");
+  if(modal_message_content){
+    message_clear();
+    clearTimeout(message_countdown);
+  }
 }
 add_schedule_next_close.onclick = () => {
-    var modal_message_content = document.getElementById("modal-message");
-    if(modal_message_content){
-        message_clear();
-        clearTimeout(message_countdown);
-    }
-    modal.style.display = "none";
-    add_schedule_next.remove();
+  var modal_message_content = document.getElementById("modal-message");
+  if(modal_message_content){
+    message_clear();
+    clearTimeout(message_countdown);
+  }
+  modal.style.display = "none";
+  add_schedule_next.remove();
 }
 add_schedule_next_back.onclick = () => {
-    var modal_message_content = document.getElementById("modal-message");
-    if(modal_message_content){
-        message_clear();
-        clearTimeout(message_countdown);
-    }
-    add_schedule_next.remove();
-    add_schedule_data_content.style.display = "block";
+  var modal_message_content = document.getElementById("modal-message");
+  if(modal_message_content){
+    message_clear();
+    clearTimeout(message_countdown);
+  }
+  add_schedule_next.remove();
+  add_schedule_data_content.style.display = "block";
 }
 var submit = document.getElementById("new-schedule-submit");
 submit.onclick = () => {
-    var modal_message_content = document.getElementById("modal-message");
-    if(modal_message_content){
-        message_clear();
-        clearTimeout(message_countdown);
-    }
+  var modal_message_content = document.getElementById("modal-message");
+  if(modal_message_content){
+    message_clear();
+    clearTimeout(message_countdown);
+  }
 }

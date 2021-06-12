@@ -1,0 +1,61 @@
+<nav>
+  <ul id = "main-menu" class = "side-list"> 
+    <li id = "current-user-content">
+      <span class = "user-name"><i class="fas fa-id-card" style = "font-size: 18px;"></i><%= current_user.name %></span>
+      <div id = "attendance-content">
+        <%= render "shared/side_menu_attendance" %>
+      </div>
+      <%= link_to "ダッシュボード", user_path(current_user.public_uid), data: {"turbolinks"=>false}, class: "my-report-link" %>
+      <%= link_to "有給休暇申請", new_paid_holiday_path, class: "my-report-link" %>
+    </li>
+
+    <%= link_to root_path, data: {"turbolinks"=>false} do %>
+      <li>
+        <span><i class="fas fa-home"></i>ホーム</span>
+      </li>
+    <% end %>
+    <%= link_to meeting_rooms_path, data: {"turbolinks"=>false} do %>
+      <li>     
+        <span><i class="fas fa-headset"></i>ミーティング</span>
+      </li>
+    <% end %>
+    <% if current_user.admin? %>
+      <%= link_to users_path, data: {"turbolinks"=>false} do %>
+        <li>
+          <span><i class="fas fa-chalkboard-teacher"></i>ユーザー管理</span>
+        </li>
+      <% end %>
+
+      <%= link_to new_user_registration_path, data: {"turbolinks"=>false} do %>
+        <li>
+          <span><i class="fas fa-user-plus"></i>ユーザー新規作成</span>
+        </li>
+      <% end %>
+
+      <%= link_to attendances_path, data: {"turbolinks"=>false} do %>
+        <li>
+          <span><i class="fas fa-user-clock"></i>勤怠管理</span>
+        </li>
+      <% end %>
+
+      <%= link_to new_department_path, data: {"turbolinks"=>false} do %>
+        <li>
+          <span><i class="fas fa-building"></i>部署設定</span>
+        </li>
+      <% end %>
+    <% end %>
+
+    <%= link_to destroy_user_session_path, method: :delete do %>
+      <li>
+        <span><i class="fas fa-sign-out-alt"></i>ログアウト</span>
+      </li>
+    <% end %>
+  </ul>
+</nav>
+
+
+
+
+
+
+

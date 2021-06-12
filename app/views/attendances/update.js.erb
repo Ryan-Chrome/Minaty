@@ -1,2 +1,10 @@
-var attendance_content = document.getElementById("attendance-content");
-attendance_content.innerHTML = "<%= j(render "shared/attendance") %>";
+<% if @sidebar_attendance.present? %>
+  <% if @sidebar_attendance.saved_changes? %>
+    var attendance_content = document.getElementById("attendance-content");
+    attendance_content.innerHTML = "<%= j(render "shared/side_menu_attendance") %>";
+  <% else %>
+    alert("既に退勤時間は打刻されています");
+  <% end %>
+<% else%>
+  alert("出勤時間が打刻されていません");
+<% end %>

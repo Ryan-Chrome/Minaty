@@ -1,56 +1,56 @@
 <div class = "modal-top-bar">
-    <ul>
-        <li class = "topbar-header">スケジュール</li>
-    </ul>
+  <ul>
+    <li class = "topbar-header">スケジュール</li>
+  </ul>
 </div>
 <div class = data-form>
-    <%= form_with url: schedules_date_change_path, method: :get do |f| %>
-        <%= f.date_field :edit_schedule_date, class: "data-text", value: Date.today %>
-        <%= f.submit "移動", class: "schedule-date-btn" %>
-    <% end %>
+  <%= form_with url: schedules_date_change_path, method: :get do |f| %>
+    <%= f.date_field :edit_schedule_date, class: "data-text", value: Date.today %>
+    <%= f.submit "移動", class: "schedule-date-btn" %>
+  <% end %>
 </div>
 <div class = "schedule-content">
-    <% if @schedules.present? %>
-        <div class = "schedule-time">
-            <ul class = "time-list">
-                <% @work_time.each do |n| %>
-                    <li style="height: calc(100%/<%= @work_length %>);"><span><%= "#{n}:00" %></span></li>
-                <% end %>
-            </ul>
-        </div>
-        <div class = "schedule-time-line">
-            <ul class = "line-list">
-                <% @work_time.each do %>
-                    <li style="height: calc(100%/<%= @work_length %>);"><span></span></li>
-                <% end %>
-            </ul>
-            <% s = 0 %>
-            <div style="top: calc(100%/<%= @work_length*2 %>); height: calc(100% - 100%/<%= @work_length %>);" class = "schedule">
-                <% (0..((@work_length-1)*6)-1).each do |i| %>
-                    <% if @schedule_times.sum([]).include?(i) %>
-                        <% if @schedule_start[s] == i && @schedule_end[s] == i %>
-                            <%= link_to edit_schedule_path(@schedules[s].id), remote: true do %><span style="height: calc(100%/<%= (@work_length-1) * 6 %>);" class = "edit-schedule-<%= s %>"><span class = "schedule-name" id = "edit-schedule-name-<%= s %>"><%= @schedules[s].name.truncate(10) %></span><span class = "time" id = "edit-time-<%= s %>"><%= "#{@schedules[s].start_at}~#{@schedules[s].finish_at}" %></span></span><% end %>
-                            <% s += 1 %>
-                        <% elsif @schedule_start[s] == i %>
-                            <%= link_to edit_schedule_path(@schedules[s].id), remote: true do %><span style="height: calc(100%/<%= (@work_length-1) * 6 %>);" class = "edit-schedule-<%= s %>"><span class = "schedule-name" id = "edit-schedule-name-<%= s %>"><%= @schedules[s].name.truncate(10) %></span></span><% end %>
-                        <% elsif @schedule_end[s] == i %>
-                            <%= link_to edit_schedule_path(@schedules[s].id), remote: true do %><span style="height: calc(100%/<%= (@work_length-1) * 6 %>);" class = "edit-schedule-<%= s %>"><span class = "time" id = "edit-time-<%= s %>"><%= "#{@schedules[s].start_at}~#{@schedules[s].finish_at}" %></span></span><% end %>
-                            <% s += 1 %>
-                        <% else %>
-                            <%= link_to edit_schedule_path(@schedules[s].id), remote: true do %><span style="height: calc(100%/<%= (@work_length-1) * 6 %>);" class = "edit-schedule-<%= s %>"></span><% end %>
-                        <% end %>
-                    <% else %>
-                        <span style="height: calc(100%/<%= (@work_length-1) * 6 %>);" style="opacity: 0;"></span>
-                    <% end %>
-                <% end %>
-            </div>
-        </div>
-    <% else %>
-        <div class = "none-schedules-content">
-            <div class = "none-schedules-content-text">
-                <i class="fas fa-calendar-alt"></i>
-                <span>スケジュール未設定</span>
-            </div>
-        </div>
-    <% end %>
+  <% if @schedules.present? %>
+    <div class = "schedule-time">
+      <ul class = "time-list">
+        <% @work_time.each do |n| %>
+          <li style="height: calc(100%/<%= @work_length %>);"><span><%= "#{n}:00" %></span></li>
+        <% end %>
+      </ul>
+    </div>
+    <div class = "schedule-time-line">
+      <ul class = "line-list">
+        <% @work_time.each do %>
+          <li style="height: calc(100%/<%= @work_length %>);"><span></span></li>
+        <% end %>
+      </ul>
+      <% s = 0 %>
+      <div style="top: calc(100%/<%= @work_length*2 %>); height: calc(100% - 100%/<%= @work_length %>);" class = "schedule">
+        <% (0..((@work_length-1)*6)-1).each do |i| %>
+          <% if @schedule_times.sum([]).include?(i) %>
+            <% if @schedule_start[s] == i && @schedule_end[s] == i %>
+              <%= link_to edit_schedule_path(@schedules[s].id), remote: true do %><span style="height: calc(100%/<%= (@work_length-1) * 6 %>);" class = "edit-schedule-<%= s %>"><span class = "schedule-name" id = "edit-schedule-name-<%= s %>"><%= @schedules[s].name.truncate(10) %></span><span class = "time" id = "edit-time-<%= s %>"><%= "#{@schedules[s].start_at}~#{@schedules[s].finish_at}" %></span></span><% end %>
+              <% s += 1 %>
+            <% elsif @schedule_start[s] == i %>
+              <%= link_to edit_schedule_path(@schedules[s].id), remote: true do %><span style="height: calc(100%/<%= (@work_length-1) * 6 %>);" class = "edit-schedule-<%= s %>"><span class = "schedule-name" id = "edit-schedule-name-<%= s %>"><%= @schedules[s].name.truncate(10) %></span></span><% end %>
+            <% elsif @schedule_end[s] == i %>
+              <%= link_to edit_schedule_path(@schedules[s].id), remote: true do %><span style="height: calc(100%/<%= (@work_length-1) * 6 %>);" class = "edit-schedule-<%= s %>"><span class = "time" id = "edit-time-<%= s %>"><%= "#{@schedules[s].start_at}~#{@schedules[s].finish_at}" %></span></span><% end %>
+              <% s += 1 %>
+            <% else %>
+              <%= link_to edit_schedule_path(@schedules[s].id), remote: true do %><span style="height: calc(100%/<%= (@work_length-1) * 6 %>);" class = "edit-schedule-<%= s %>"></span><% end %>
+            <% end %>
+          <% else %>
+            <span style="height: calc(100%/<%= (@work_length-1) * 6 %>);" style="opacity: 0;"></span>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  <% else %>
+    <div class = "none-schedules-content">
+      <div class = "none-schedules-content-text">
+        <i class="fas fa-calendar-alt"></i>
+        <span>スケジュール未設定</span>
+      </div>
+    </div>
+  <% end %>
 </div>

@@ -1,31 +1,35 @@
 <section id = "group-search-section">
-    <div class = "clock-container">
-        <div class = "box">
-            <div class = "clock">
-                <div class = "hour">
-                    <div class = "hr" id = "hr"></div>
-                </div>
-                <div class = "min">
-                    <div class = "mn" id = "mn"></div>
-                </div>
-                <div class = "sec">
-                    <div class = "sc" id = "sc"></div>
-                </div>
-            </div>
+  <div class = "clock-container">
+    <div class = "box">
+      <div class = "clock">
+        <div class = "hour">
+          <div class = "hr" id = "hr"></div>
         </div>
+        <div class = "min">
+          <div class = "mn" id = "mn"></div>
+        </div>
+        <div class = "sec">
+          <div class = "sc" id = "sc"></div>
+        </div>
+      </div>
     </div>
-    <div id = "group-search-list">
-        <button id = "user-search-btn">ユーザー検索</button>
-        <ul id = "user-list">
-            <li id = "new-group-btn">新規グループ作成</li>
-            <% @departments.each do |department| %>
-                <li><%= link_to department.department, root_path(department_name: department.department), remote: true %></li>
-            <% end %>
-            <% @contact_groups.each do |group| %>
-                <li id = "side-group-id-<%= group.id %>"><%= link_to group.name.truncate(10), root_path(group_id: group.id), remote: true %></li>
-            <% end %>
-        </ul>
-    </div>
+  </div>
+  <div id = "group-search-list">
+    <button id = "user-search-btn">ユーザー検索</button>
+    <ul id = "user-list">
+      <li id = "new-group-btn">新規グループ作成</li>
+      <% @departments.each do |department| %>
+        <li>
+          <%= link_to department.name, user_sidebar_search_path(department_id: department.id), remote: true %>
+        </li>
+      <% end %>
+      <% @contact_groups.each do |group| %>
+        <li id = "side-group-id-<%= group.id %>">
+          <%= link_to group.name.truncate(10), user_sidebar_search_path(group_id: group.id), remote: true %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
 </section>
 
 

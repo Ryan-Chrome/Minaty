@@ -68,7 +68,7 @@ jobs:
     - run:
         name: Run request rspec
         command: |
-          bundle exec rspec spec/requests \
+          bundle exec rspec spec/requests -f d \
             --format progress \
             --format RspecJunitFormatter \
             --out /tmp/test-results/request_rspec.xml \
@@ -76,7 +76,7 @@ jobs:
     - run:
         name: Run system rspec
         command: |
-          bundle exec rspec spec/system \
+          bundle exec rspec spec/system -f d \
             --format progress \
             --format RspecJunitFormatter \
             --out /tmp/test-results/system_rspec.xml \

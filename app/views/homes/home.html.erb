@@ -1,94 +1,67 @@
 <% if user_signed_in? %>
-    <div id = "common-container" class = "home-index-page">
-        <div id = "timer-container">
-            <div id = "timer-content">
-                <div id = "timer-menu">
-                    <div id = "timer-start">
-                        start <i class="far fa-play-circle"></i>
-                    </div>
-                    <div id = "timer-stop">
-                        stop <i class="far fa-stop-circle"></i>
-                    </div>
-                    <div id = "timer-reset">
-                        reset <i class="fas fa-sync-alt"></i>
-                    </div>
-                </div>
-                <div id = "timer">
-                    00：00：00
-                </div>
-            </div>
-            <div id = "timer-start-time-content">
-                <%= link_to schedules_add_timer_path(start_at: "", finish_at: ""), id: "timer-schedule-link" ,remote: true do %>
-                    <span id = "timer-add-schedule"><i class="fas fa-calendar-alt"></i> Add</span>
-                <% end %>
-                <span id = "timer-start-time">TIME</span>
-            </div>
-        </div>
-        <div id = "Modal">
-            <%= render "shared/chat_send_select" %>
-            <%= render "shared/user_search_box" %>
-            <%= render "contact_groups/new" %>
-            <%= render "schedules/add_schedule_data" %>
-            <%= render "schedules/edit_schedule" %>
-        </div>
-        <div id = "chat-form">
-            <%= form_with(model: @new_message, url: general_messages_multiple_create_path, id: "chat-ajax") do |f| %>
-                <span id = "form-move"><i class="fas fa-expand-arrows-alt"></i></span>
-                <h6><i class="fas fa-comment"></i> チャットフォーム</h6>
-                <span id = "add-send-user">宛先追加</span>
-                <div id = "chat-send-users-form-list">
-                    
-                </div>
-                <ul id = "chat-send-user-list">
-                    
-                </ul>
-                <%= f.text_area :content, id: "chat-text-area" %>
-                <%= f.submit "送信", id: "home-chat-send-btn", data: {"disable-with" => "送信中..."} %>
-            <% end %>
-            <div id = "chat-send-loading">
-                <div id = "loader"></div>
-                <span>送信中</span>
-            </div>
-        </div>
-        <div id = "side-menu">
-            <%= render "homes/side_menu"  %>
-        </div>
-        <div id = "user-container">
-            <%= render "homes/user_container" %>
-            <% #render "homes/user_search_section" %>
-        </div>
-        <div id = "chat-container">
-            <%= render "homes/chat_container" %>
-        </div>
-        <div id = "schedule-container">
-            <%= render "homes/schedule_container" %>
-        </div>
+  <div id = "common-container" class = "home-index-page">
+    <div id = "timer-container">
+      <%= render "shared/timer" %>
     </div>
-    <script>
-        var modal = document.getElementById("Modal");
-        var chat_ajax = document.getElementById("chat-ajax");
-        var chat_textarea = document.getElementById("chat-text-area");
-        var chat_loading = document.getElementById("chat-send-loading");
-        chat_ajax.addEventListener("ajax:before", function(event){
-            chat_textarea.readOnly = true;
-            chat_loading.style.display = "flex";
-        });
-        chat_ajax.addEventListener("ajax:complete", function(event){
-            chat_textarea.readOnly = false;
-            chat_loading.style.display = "none";
-        });
-        
-    </script>
+    <div id = "Modal">
+      <%= render "chat_send_select" %>
+      <%= render "user_search_box" %>
+      <%= render "contact_groups/new" %>
+      <%= render "schedules/add_schedule_data" %>
+      <%= render "schedules/edit_schedule" %>
+    </div>
+    <div id = "chat-form">
+      <%= form_with(model: @new_message, url: general_messages_multiple_create_path, id: "chat-ajax") do |f| %>
+        <span id = "form-move"><i class="fas fa-expand-arrows-alt"></i></span>
+        <h6><i class="fas fa-comment"></i> チャットフォーム</h6>
+        <span id = "add-send-user">宛先追加</span>
+        <div id = "chat-send-users-form-list"></div>
+        <ul id = "chat-send-user-list"></ul>
+        <%= f.text_area :content, id: "chat-text-area" %>
+        <%= f.submit "送信", id: "home-chat-send-btn", data: {"disable-with" => "送信中..."} %>
+      <% end %>
+      <div id = "chat-send-loading">
+        <div id = "loader"></div>
+        <span>送信中</span>
+      </div>
+    </div>
+    
+    <div id = "user-container">
+      <%= render "homes/user_container" %>
+    </div>
+    <div id = "chat-container">
+      <div id = "chat-content" data-page_count = "<%= @page_count %>">
+        <%= render "homes/chat_container" %>
+      </div>
+    </div>
+    <div id = "schedule-container">
+      <%= render "homes/schedule_container" %>
+    </div>
+  </div>
+  <script>
+    var modal = document.getElementById("Modal");
+    var chat_ajax = document.getElementById("chat-ajax");
+    var chat_textarea = document.getElementById("chat-text-area");
+    var chat_loading = document.getElementById("chat-send-loading");
+    chat_ajax.addEventListener("ajax:before", function(event){
+      chat_textarea.readOnly = true;
+      chat_loading.style.display = "flex";
+    });
+    chat_ajax.addEventListener("ajax:complete", function(event){
+      chat_textarea.readOnly = false;
+      chat_loading.style.display = "none";
+    });
+  </script>
 <% else %>
-    <div class = "not-login-home">
-        <h1>Minaty</h1>
-        <nav>
-            <%= link_to "Login", new_user_session_path, id: "login-btn" %>
-        </nav>
-        <div class = "circle1"></div>
-        <div class = "circle2"></div>
-        <div class = "circle3"></div>
-        <div class = "circle4"></div>
-    </div>
+  <div class = "not-login-home">
+    <h1>Minaty</h1>
+    <nav>
+      <%= link_to "Login", new_user_session_path, id: "login-btn" %>
+    </nav>
+    <div class = "circle1"></div>
+    <div class = "circle2"></div>
+    <div class = "circle3"></div>
+    <div class = "circle4"></div>
+  </div>
 <% end %>
 

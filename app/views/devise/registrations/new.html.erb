@@ -1,43 +1,39 @@
 <div id = "common-container">
-    <div id = "side-menu">
-        <%= render "homes/side_menu" %>
+  <div id = "management-top">
+    <div id = "management-container">
+      <div id = "user-new-form">
+        <h2>新規ユーザー作成</h2>
+
+        <%= form_with model: @user, url: user_registration_path, local: true, method: :post do |f| %>
+          <%= f.label :name, "名前" %>
+          <%= f.text_field :name, class: "form" %>
+
+          <%= f.label :kana, "フリガナ" %>
+          <%= f.text_field :kana, class: "form" %>
+
+          <%= f.label :department_id, "部署" %>
+          <%= f.select :department_id, @department_select, {include_blank: "部署を選択してください"} %>
+
+          <%= f.label :email, "メールアドレス" %>
+          <%= f.email_field :email, class: "form" %>
+
+          <%= f.label :password, "パスワード(半角英数字6文字以上)" %>
+          <%= f.password_field :password, class: "form" %>
+
+          <%= f.label :password_confirmation, "パスワード(確認用)" %>
+          <%= f.password_field :password_confirmation, class: "form" %>
+
+          <div class = "check-box-form">
+            <span>管理者権限</span>
+            <%= f.check_box :admin, class: "check-box" %>
+            <%= f.label :admin, "管理権限を付与", class: "check-box-label" %>
+          </div>
+
+          <%= f.submit "登録", class: "btn" %>
+        <% end %>
+      </div>
     </div>
-    <div id = "management-top">
-        <%= render "managements/menu_links" %>
-        <div id = "management-container">
-            <div id = "user-new-form">
-                <h2>新規ユーザー作成</h2>
-
-                <%= form_with model: @user, url: user_registration_path, local: true, method: :post do |f| %>
-                    <%= f.label :name, "名前" %>
-                    <%= f.text_field :name, class: "form" %>
-
-                    <%= f.label :kana, "フリガナ" %>
-                    <%= f.text_field :kana, class: "form" %>
-
-                    <%= f.label :department, "所属" %>
-                    <%= f.select :department, [["人事部", "人事部"], ["開発部", "開発部"], ["営業部", "営業部"]], {include_blank: "部署を選択してください"} %>
-
-                    <%= f.label :email, "メールアドレス" %>
-                    <%= f.email_field :email, class: "form" %>
-
-                    <%= f.label :password, "パスワード(半角英数字6文字以上)" %>
-                    <%= f.password_field :password, class: "form" %>
-
-                    <%= f.label :password_confirmation, "パスワード(確認用)" %>
-                    <%= f.password_field :password_confirmation, class: "form" %>
-
-                    <div class = "check-box-form">
-                        <span>管理者権限</span>
-                        <%= f.check_box :admin, class: "check-box" %>
-                        <%= f.label :admin, "管理権限を付与", class: "check-box-label" %>
-                    </div>
-
-                    <%= f.submit "登録", class: "btn" %>
-                <% end %>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
 
 

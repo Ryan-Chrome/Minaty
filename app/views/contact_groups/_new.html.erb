@@ -1,63 +1,61 @@
 <div id = "new-group">
-    <%= form_with(model: @new_group) do |f| %>
-        <div id = "new-group-main-form">
-            <div id = "new-group-main-form-top-bar" class = "modal-top-bar">
-                <ul>
-                    <li id = "new-group-main-form-header" class = "topbar-header">新規グループ作成</li>
-                    <li id = "new-group-close" class = "topbar-close-btn"><span>＋</span></li>
-                </ul>
-            </div>
-            <%= f.label :name, "グループ名" %>
-            <%= f.text_field :name, class: "new-group-form" %>
+  <%= form_with(model: @new_group) do |f| %>
+    <div id = "new-group-main-form">
+      <div id = "new-group-main-form-top-bar" class = "modal-top-bar">
+        <ul>
+          <li id = "new-group-main-form-header" class = "topbar-header">新規グループ作成</li>
+          <li id = "new-group-close" class = "topbar-close-btn"><span>＋</span></li>
+        </ul>
+      </div>
+      <%= f.label :name, "グループ名" %>
+      <%= f.text_field :name, class: "new-group-form" %>
 
-            <%= f.submit "作成", class: "new-group-btn", id: "new-group-submit" %>
-        </div>
-        <div id = "new-group-sub-form">
-            <div class = "modal-top-bar">
-                <ul>
-                    <li class = "topbar-header">追加ユーザー</li>
-                </ul>
+      <%= f.submit "作成", class: "new-group-btn", id: "new-group-submit" %>
+    </div>
+    <div id = "new-group-sub-form">
+      <div class = "modal-top-bar">
+        <ul>
+          <li class = "topbar-header">追加ユーザー</li>
+        </ul>
+      </div>
+      <div id = "new-group-user-list">
+        <% @departments.each do |department| %>
+          <div>
+            <div class = "group-container">
+              <span style="pointer-events: none;"><%= department.name %></span>
+              <input type="checkbox" class = "group-check">
             </div>
-            <div id = "new-group-user-list">
-                <% @departments.each do |department| %>
-                    <div>
-                        <div class = "group-container">
-                            <span style="pointer-events: none;"><%= department.department %></span>
-                            <input type="checkbox" class = "group-check">
-                        </div>
-                        <ul>
-                            <% @users.each do |user| %>
-                                <% unless user == current_user %>
-                                    <% if user.department == department.department %> 
-                                        <li class = "user-selector-<%= user.public_uid %> user-selector" >
-                                            <%= user.name %>
-                                            <%= f.check_box :user_ids, { multiple: true, include_hidden: false }, user.public_uid %>   
-                                        </li>
-                                    <% end %>
-                                <% end %>
-                            <% end %>
-                        </ul>
-                    </div>
+            <ul>
+              <% department.users.each do |user| %>
+                <% unless user == current_user %>
+                  <li class = "user-selector-<%= user.public_uid %> user-selector" >
+                    <%= user.name %>
+                    <%= f.check_box :user_ids, { multiple: true, include_hidden: false }, user.public_uid %>   
+                  </li>
                 <% end %>
-                <% @contact_groups.each do |group| %>
-                    <div id = "contact-group-id-<%= group.id %>">
-                        <div class = "group-container">
-                            <span style="pointer-events: none;"><%= group.name.truncate(10) %></span>
-                            <input type="checkbox" class = "group-check">
-                        </div>
-                        <ul>
-                            <% group.contact_group_relations.each do |relation| %>
-                                <li class = "user-selector-<%= relation.user.public_uid %> user-selector" >
-                                    <%= relation.user.name %>
-                                    <input type="checkbox" value="<%= relation.user.public_uid %>">
-                                </li>
-                            <% end %>
-                        </ul>
-                    </div>
-                <% end %>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+        <% @contact_groups.each do |group| %>
+          <div id = "contact-group-id-<%= group.id %>">
+            <div class = "group-container">
+              <span style="pointer-events: none;"><%= group.name.truncate(10) %></span>
+              <input type="checkbox" class = "group-check">
             </div>
-        </div>
-    <% end %>
+            <ul>
+              <% group.contact_group_relations.each do |relation| %>
+                <li class = "user-selector-<%= relation.user.public_uid %> user-selector" >
+                  <%= relation.user.name %>
+                  <input type="checkbox" value="<%= relation.user.public_uid %>">
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
 </div>
 
 

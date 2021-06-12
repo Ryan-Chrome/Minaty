@@ -1,16 +1,16 @@
 <div class = "message-content" id = "room-message-<%= message.id %>">
-    <span class = message-name><%= message.user.name %></span>
-    <div class = "message"><%= safe_join(message.content.split("\n"), tag(:br)) %></div>
-    <span class = "message-data"><%= l message.created_at %></span>
+  <span class = message-name><%= message.user.name %></span>
+  <div class = "message"><%= safe_join(message.content.split("\n"), tag(:br)) %></div>
+  <span class = "message-data"><%= l message.created_at %></span>
 </div>
 
 <script>
-    var current_user_id = document.getElementById("messages").getAttribute("data-message_id");
-    var message_user_id = "<%= message.user.public_uid %>";
-    var message = document.getElementById("room-message-<%= message.id %>");
-    if(current_user_id == message_user_id){
-        message.classList.add("current");
-    } else {
-        message.classList.add("other");
-    }
+  var current_user_id = document.getElementById("messages").getAttribute("data-message_id");
+  var message_user_id = "<%= message.user.public_uid %>";
+  var message = document.getElementById("room-message-<%= message.id %>");
+  if(current_user_id == message_user_id){
+    message.classList.add("current");
+  } else {
+    message.classList.add("other");
+  }
 </script>

@@ -1,257 +1,703 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe "MeetingRoom", type: :request do
+  let!(:dept) { create(:human_resources_dept) }
+  let!(:user) { create(:user, department_id: dept.id) }
+  let!(:other_user) { create(:other_user, department_id: dept.id) }
+  let!(:therd_user) { create(:therd_user, department_id: dept.id) }
 
-    let!(:user){ create(:user) }
-    let!(:other_user){ create(:other_user) }
-    let!(:therd_user){ create(:therd_user) }
+  # ミーティングルーム表示
+  describe "GET #show" do
+    let!(:meeting_room) { create(:meeting_room) }
+    let!(:entry) { meeting_room.users << user }
+    let!(:other_meeting_room) { create(:meeting_room) }
+
+    context "ログイン済" do
+      before { sign_in user }
+
+      context "エントリーしているルームの場合" do
+        subject { get meeting_room_path(meeting_room.public_uid) }
+        
+        it "リクエスト成功" do
+          subject
+          expect(response.status).to eq 200
+        end
+
+        it "ルーム表示" do
+          subject
+          expect(response.body).to include "プレビュー"
+        end
+      end
+
+      context "エントリーしていないルームの場合" do
+        subject { get meeting_room_path(other_meeting_room.public_uid) }
+
+        it "リクエスト成功" do
+          subject
+          expect(response.status).to eq 302
+        end
+
+        it "ルーム一覧へリダイレクト" do
+          subject
+          expect(response).to redirect_to meeting_rooms_path
+        end
+      end
+    end
+
+    context "未ログイン" do
+      subject { get meeting_room_path(meeting_room.public_uid) }
+
+      it "リクエスト成功" do
+        subject
+        expect(response.status).to eq 302
+      end
+
+      it "ログインページへリダイレクト" do
+        subject
+        expect(response).to redirect_to new_user_session_path
+      end
+    end
+  end
+
+  # ミーティングルーム参加
+  describe "GET #join" do
+    let!(:meeting_room) { create(:meeting_room) }
+    let!(:entry) { meeting_room.users << user }
+    let(:valid_header) { { "HTTP_REFERER" => meeting_room_url(meeting_room.public_uid) } }
+    let(:invalid_header) { { "HTTP_REFERER" => meeting_room_url(other_meeting_room.public_uid) } }
+    let!(:other_meeting_room) { create(:meeting_room) }
+
+    context "ログイン済" do
+      before { sign_in user }
+
+      context "エントリーしているルームからAjax通信かつフォーマットがJS形式の場合" do
+        context "エントリーしているルームIDがURLに含まれる場合" do
+          subject {
+            get meeting_rooms_join_path(meeting_room.public_uid),
+                headers: valid_header,
+                xhr: true
+          }
+
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "JSコードが返ってくること" do
+            subject
+            expect(response.body).to include "setting_video"
+          end
+        end
+
+        context "エントリーしていないルームIDがURLに含まれる場合" do
+          subject {
+            get meeting_rooms_join_path(other_meeting_room.public_uid),
+                headers: valid_header,
+                xhr: true
+          }
+
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 302
+          end
+
+          it "root_pathへリダイレクト" do
+            subject
+            expect(response).to redirect_to root_path
+          end
+        end
+      end
+
+      context "エントリーしていないルームからの場合" do
+        subject {
+          get meeting_rooms_join_path(meeting_room.public_uid),
+              headers: invalid_header,
+              xhr: true
+        }
+
+        it "リクエスト成功" do
+          subject
+          expect(response.status).to eq 302
+        end
+
+        it "root_pathへリダイレクト" do
+          subject
+          expect(response).to redirect_to root_path
+        end
+      end
+
+      context "フォーマットがJS形式以外の場合" do
+        it "ルーティングエラー" do
+          expect do
+            get meeting_rooms_join_path(meeting_room.public_uid, format: :html),
+                headers: valid_header,
+                xhr: true
+          end.to raise_error(ActionController::RoutingError)
+        end
+      end
+
+      context "Ajax通信でない場合" do
+        it "ルーティングエラー" do
+          expect do
+            get meeting_rooms_join_path(meeting_room.public_uid, format: :js),
+                headers: valid_header
+          end.to raise_error(ActionController::RoutingError)
+        end
+      end
+    end
+
+    context "未ログイン" do
+      it "認証失敗エラーコードが返ってくること" do
+        get meeting_rooms_join_path(meeting_room.public_uid),
+            headers: valid_header,
+            xhr: true
+        expect(response.status).to eq 401
+      end
+    end
+  end
+
+  # ミーティング一覧
+  describe "GET #index" do
+    let!(:meeting_room) { create(:meeting_room) }
+    let!(:entry) { meeting_room.users << user }
+
+    subject { get meeting_rooms_path }
     
-    # ミーティングルーム表示
-    describe "GET #show" do
-        let!(:meeting_room){ create(:meeting_room) }
-        let!(:entry){ meeting_room.entries.create(user_id: user.id) }
-        let!(:other_meeting_room){ create(:meeting_room) }
-        # ログイン済みユーザー
-        context "user is logged in" do
-            before do
-                sign_in user
-            end
+    context "ログイン済" do
+      before { sign_in user }
 
-            context "Request" do
-                # エントリー済みのミーティングルームにアクセス
-                it "Success my_meeting_room" do
-                    get meeting_room_path(meeting_room.public_uid)
-                    expect(response.status).to eq 200
-                end
+      it "リクエスト成功" do
+        subject
+        expect(response.status).to eq 200
+      end
 
-                # エントリーしていないミーティングルーム
-                it "Error other_meeting_room" do
-                    get meeting_room_path(other_meeting_room.public_uid)
-                    expect(response.status).to eq 302
-                    expect(response).to redirect_to meeting_rooms_path
-                end
-            end
-
-            context "Response" do
-                # ミーティング時間中もしくは前の場合
-                it "meeting_room" do
-                    get meeting_room_path(meeting_room.public_uid)
-                    expect(response.body).to include("プレビュー")
-                end
-            end
-        end
+      it "ルーム一覧を表示" do
+        subject
+        expect(response.body).to include "#{meeting_room.name}"
+      end
     end
 
-    # ミーティングルーム参加
-    describe "GET #join" do
-        let!(:meeting_room){ create(:meeting_room) }
-        let!(:entry){ meeting_room.entries.create(user_id: user.id) }
-        let(:meeting_room_header){ { "HTTP_REFERER" => meeting_room_url(meeting_room.public_uid) } }
-        let!(:other_meeting_room){ create(:meeting_room) }
-        # ログイン済みユーザー
-        context "user is logged in" do
-            before do
-                sign_in user
-            end
+    context "未ログイン" do
+      it "リクエスト成功" do
+        subject
+        expect(response.status).to eq 302
+      end
 
-            context "Request" do
-                # エントリー済みのミーティングルームからのリクエスト(js形式)
-                it "Success from my_meeting_room(js)" do
-                    get meeting_rooms_join_path(meeting_room.public_uid), headers: meeting_room_header, xhr: true
-                    expect(response.status).to eq 200
-                end
-    
-                # エントリー済みのミーティングルームからのリクエスト(js形式以外)
-                it "Error from my_meeting_room(not_js)" do
-                    expect do
-                        get meeting_rooms_join_path(meeting_room.public_uid), headers: meeting_room_header
-                    end.to raise_error(ActionController::RoutingError)
-                end
-    
-                # ユーザーの持つミーティングルームID以外を含めたパスが送られた場合
-                it "Error path containing other_meeting_room_id" do
-                    get meeting_rooms_join_path(other_meeting_room.public_uid), headers: meeting_room_header, xhr: true
-                    expect(response.status).to eq 302
-                    expect(response).to redirect_to root_path
-                end
-            end
-        end
+      it "ログインページへリダイレクト" do
+        subject
+        expect(response).to redirect_to new_user_session_path
+      end
+    end
+  end
+
+  # ミーティングルーム新規作成フォーム
+  describe "GET #new" do
+    subject { get new_meeting_room_path }
+
+    context "ログイン済" do
+      before { sign_in user }
+
+      it "リクエスト成功" do
+        subject
+        expect(response.status).to eq 200
+      end
+
+      it "ルーム新規作成画面表示" do
+        subject
+        expect(response.body).to include "ルーム作成"
+      end
     end
 
-    # ミーティング一覧
-    describe "GET #index" do
-        let!(:meeting_room){ create(:meeting_room) }
-        let!(:entry){ meeting_room.entries.create(user_id: user.id) }
-        let!(:other_meeting_room){ create(:meeting_room, name: "other_room") }
-        # ログイン済みユーザー
-        context "user is logged in" do
-            before do
-                sign_in user
-            end
+    context "未ログイン" do
+      it "リクエスト成功" do
+        subject
+        expect(response.status).to eq 302
+      end
 
-            # リクエスト
-            it "Request success" do
-                get meeting_rooms_path
-                expect(response.status).to eq 200
-            end
-
-            # 自分のルームを表示
-            it "Display my_meeting_rooms" do
-                get meeting_rooms_path
-                expect(response.body).to include("meeting_room", "10月09日")
-            end
-        end
+      it "ログインページへリダイレクト" do
+        subject
+        expect(response).to redirect_to new_user_session_path
+      end
     end
-    
-    # ミーティングルーム新規作成フォーム
-    describe "GET #new" do
-        # ログイン済みユーザー
-        context "user is logged in" do
-            before do
-                sign_in user
-            end
+  end
 
-            # リクエスト
-            it "Request success" do
-                get new_meeting_room_path
-                expect(response.status).to eq 200
-            end
+  # ミーティングルーム新規作成
+  describe "POST #create" do
+    # 有効なパラメータ
+    let(:valid_params) {
+      { "meeting_room" => {
+        "name" => "テスト会議",
+        "start_at(4i)" => "10",
+        "start_at(5i)" => "00",
+        "finish_at(4i)" => "17",
+        "finish_at(5i)" => "00",
+        "meeting_date" => "#{Date.today}",
+        "room_entry_users" => ["#{other_user.public_uid}", "#{therd_user.public_uid}"],
+      } }
+    }
+    # ルーム名が空のパラメータ
+    let(:invalid_name_params) {
+      { "meeting_room" => {
+        "name" => "",
+        "start_at(4i)" => "10",
+        "start_at(5i)" => "00",
+        "finish_at(4i)" => "17",
+        "finish_at(5i)" => "00",
+        "meeting_date" => "#{Date.today}",
+        "room_entry_users" => ["#{other_user.public_uid}", "#{therd_user.public_uid}"],
+      } }
+    }
+    # 開始時間が空のパラメータ
+    let(:invalid_start_params) {
+      { "meeting_room" => {
+        "name" => "テスト会議",
+        "start_at(4i)" => "",
+        "start_at(5i)" => "",
+        "finish_at(4i)" => "17",
+        "finish_at(5i)" => "00",
+        "meeting_date" => "#{Date.today}",
+        "room_entry_users" => ["#{other_user.public_uid}", "#{therd_user.public_uid}"],
+      } }
+    }
+    # 終了時間が空のパラメータ
+    let(:invalid_finish_params) {
+      { "meeting_room" => {
+        "name" => "テスト会議",
+        "start_at(4i)" => "10",
+        "start_at(5i)" => "00",
+        "finish_at(4i)" => "",
+        "finish_at(5i)" => "",
+        "meeting_date" => "#{Date.today}",
+        "room_entry_users" => ["#{other_user.public_uid}", "#{therd_user.public_uid}"],
+      } }
+    }
+    # 開始時間が終了時刻より遅いパラメータ
+    let(:invalid_start_finish_params) {
+      { "meeting_room" => {
+        "name" => "テスト会議",
+        "start_at(4i)" => "23",
+        "start_at(5i)" => "00",
+        "finish_at(4i)" => "10",
+        "finish_at(5i)" => "00",
+        "meeting_date" => "#{Date.today}",
+        "room_entry_users" => ["#{other_user.public_uid}", "#{therd_user.public_uid}"]
+      } }
+    }
+    # 日付が空のパラメータ
+    let(:invalid_date_params) {
+      { "meeting_room" => {
+        "name" => "テスト会議",
+        "start_at(4i)" => "10",
+        "start_at(5i)" => "00",
+        "finish_at(4i)" => "17",
+        "finish_at(5i)" => "00",
+        "meeting_date" => "",
+        "room_entry_users" => ["#{other_user.public_uid}", "#{therd_user.public_uid}"],
+      } }
+    }
+    # エントリーユーザーが空のパラメータ
+    let(:invalid_entries_params) {
+      { "meeting_room" => {
+        "name" => "テスト会議",
+        "start_at(4i)" => "10",
+        "start_at(5i)" => "00",
+        "finish_at(4i)" => "17",
+        "finish_at(5i)" => "00",
+        "meeting_date" => "#{Date.today}",
+      } }
+    }
+
+    context "ログイン済" do
+      before { sign_in user }
+
+      context "パラメータが正の場合" do
+        subject { post meeting_rooms_path, params: valid_params }
+
+        it "リクエスト成功" do
+          subject
+          expect(response.status).to eq 302
         end
+
+        it "ルーム作成成功" do
+          expect do
+            subject
+          end.to change {
+            MeetingRoom.count
+          }.by(1).and change {
+            Entry.count
+          }.by(3).and change {
+            GeneralMessage.count
+          }.by(1).and change {
+            GeneralMessageRelation.count
+          }.by(2)
+        end
+
+        it "ルーム一覧ページへリダイレクト" do
+          subject
+          expect(response).to redirect_to meeting_rooms_path
+        end
+      end
+
+      context "パラメータが正ではない場合" do
+        context "ルーム名が空の場合" do
+          subject { post meeting_rooms_path, params: invalid_name_params }
+
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "ルーム作成失敗" do
+            expect do
+              subject
+            end.to change {
+              MeetingRoom.count
+            }.by(0).and change {
+              Entry.count
+            }.by(0).and change {
+              GeneralMessage.count
+            }.by(0).and change {
+              GeneralMessageRelation.count
+            }.by(0)
+          end
+
+          it "field_with_errorsが存在すること" do
+            subject
+            expect(response.body).to include "field_with_errors"
+          end
+        end
+
+        context "開始時間が空の場合" do
+          subject { post meeting_rooms_path, params: invalid_start_params }
+
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "ルーム作成失敗" do
+            expect do
+              subject
+            end.to change {
+              MeetingRoom.count
+            }.by(0).and change {
+              Entry.count
+            }.by(0).and change {
+              GeneralMessage.count
+            }.by(0).and change {
+              GeneralMessageRelation.count
+            }.by(0)
+          end
+
+          it "field_with_errorsが存在すること" do
+            subject
+            expect(response.body).to include "field_with_errors"
+          end
+        end
+
+        context "終了時間が空の場合" do
+          subject { post meeting_rooms_path, params: invalid_finish_params }
+
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "ルーム作成失敗" do
+            expect do
+              subject
+            end.to change {
+              MeetingRoom.count
+            }.by(0).and change {
+              Entry.count
+            }.by(0).and change {
+              GeneralMessage.count
+            }.by(0).and change {
+              GeneralMessageRelation.count
+            }.by(0)
+          end
+
+          it "field_with_errorsが存在すること" do
+            subject
+            expect(response.body).to include "field_with_errors"
+          end
+        end
+
+        context "開始時間が終了時間より遅い場合" do
+          subject { post meeting_rooms_path, params: invalid_start_finish_params }
+
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "ルーム作成失敗" do
+            expect do
+              subject
+            end.to change {
+              MeetingRoom.count
+            }.by(0).and change {
+              Entry.count
+            }.by(0).and change {
+              GeneralMessage.count
+            }.by(0).and change {
+              GeneralMessageRelation.count
+            }.by(0)
+          end
+
+          it "field_with_errorsが存在すること" do
+            subject
+            expect(response.body).to include "field_with_errors"
+          end
+        end
+
+        context "日付が空の場合" do
+          subject { post meeting_rooms_path, params: invalid_date_params }
+
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "ルーム作成失敗" do
+            expect do
+              subject
+            end.to change {
+              MeetingRoom.count
+            }.by(0).and change {
+              Entry.count
+            }.by(0).and change {
+              GeneralMessage.count
+            }.by(0).and change {
+              GeneralMessageRelation.count
+            }.by(0)
+          end
+
+          it "field_with_errorsが存在すること" do
+            subject
+            expect(response.body).to include "field_with_errors"
+          end
+        end
+
+        context "エントリーユーザーが空の場合" do
+          subject { post meeting_rooms_path, params: invalid_entries_params }
+
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "ルーム作成失敗" do
+            expect do
+              subject
+            end.to change {
+              MeetingRoom.count
+            }.by(0).and change {
+              Entry.count
+            }.by(0).and change {
+              GeneralMessage.count
+            }.by(0).and change {
+              GeneralMessageRelation.count
+            }.by(0)
+          end
+
+          it "field_with_errorsが存在すること" do
+            subject
+            expect(response.body).to include "参加するユーザーを<br>選択してください"
+          end
+        end
+      end
     end
 
-    # ミーティングルーム新規作成
-    describe "POST #create" do
-        let(:meeting_room_params){
-            {"meeting_room"=>{
-                "name"=>"テスト会議",
-                "start_at(4i)"=>"10",
-                "start_at(5i)"=>"00",
-                "finish_at(4i)"=>"17",
-                "finish_at(5i)"=>"00",
-                "meeting_date"=>"2021-10-01",
-                "room_entry_users"=>["#{other_user.public_uid}", "#{therd_user.public_uid}"]
-            }}
-        }
-        let(:invalid_name_params){
-            {"meeting_room"=>{
-                "name"=>"",
-                "start_at(4i)"=>"10",
-                "start_at(5i)"=>"00",
-                "finish_at(4i)"=>"17",
-                "finish_at(5i)"=>"00",
-                "meeting_date"=>"2021-10-01",
-                "room_entry_users"=>["0", "1"]
-            }}
-        }
-        let(:invalid_start_params){
-            {"meeting_room"=>{
-                "name"=>"",
-                "start_at(4i)"=>"",
-                "start_at(5i)"=>"00",
-                "finish_at(4i)"=>"17",
-                "finish_at(5i)"=>"00",
-                "meeting_date"=>"2021-10-01",
-                "room_entry_users"=>["0", "1"]
-            }}
-        }
-        let(:invalid_end_params){
-            {"meeting_room"=>{
-                "name"=>"",
-                "start_at(4i)"=>"10",
-                "start_at(5i)"=>"00",
-                "finish_at(4i)"=>"17",
-                "finish_at(5i)"=>"",
-                "meeting_date"=>"2021-10-01",
-                "room_entry_users"=>["0", "1"]
-            }}
-        }
-        let(:invalid_date_params){
-            {"meeting_room"=>{
-                "name"=>"",
-                "start_at(4i)"=>"10",
-                "start_at(5i)"=>"00",
-                "finish_at(4i)"=>"17",
-                "finish_at(5i)"=>"00",
-                "meeting_date"=>"",
-                "room_entry_users"=>["0", "1"]
-            }}
-        }
-        let(:invalid_entries_params){
-            {"meeting_room"=>{
-                "name"=>"",
-                "start_at(4i)"=>"10",
-                "start_at(5i)"=>"00",
-                "finish_at(4i)"=>"17",
-                "finish_at(5i)"=>"00",
-                "meeting_date"=>"2021-10-01"
-            }}
-        }
-        # ログイン済みユーザー
-        context "user is logged in" do
-            before do
-                sign_in user
-            end
+    context "未ログイン" do
+      subject { post meeting_rooms_path, params: valid_params }
 
-            context "Request" do
-                # 有効なパラメータ
-                it "Success valid params" do
-                    post meeting_rooms_path, params: meeting_room_params
-                    expect(response.status).to eq 302
-                    expect(response).to redirect_to meeting_rooms_path
-                end
+      it "リクエスト成功" do
+        subject
+        expect(response.status).to eq 302
+      end
 
-                # 無効なパラメータ(name)
-                it "Error invalid name" do
-                    post meeting_rooms_path, params: invalid_name_params
-                    expect(response.status).to eq 200
-                    expect(response).not_to redirect_to meeting_rooms_path
-                end
+      it "ルーム作成失敗" do
+        expect do
+          subject
+        end.to change {
+          MeetingRoom.count
+        }.by(0).and change {
+          Entry.count
+        }.by(0).and change {
+          GeneralMessage.count
+        }.by(0).and change {
+          GeneralMessageRelation.count
+        }.by(0)
+      end
 
-                # 無効なパラメータ(start(4i))
-                it "Error invalid start_hours" do
-                    post meeting_rooms_path, params: invalid_start_params
-                    expect(response.status).to eq 200
-                    expect(response).not_to redirect_to meeting_rooms_path
-                end
+      it "ログインページへリダイレクト" do
+        subject
+        expect(response).to redirect_to new_user_session_path
+      end
+    end
+  end
 
-                # 無効なパラメータ(end(5i))
-                it "Error invalid end_minutes" do
-                    post meeting_rooms_path, params: invalid_end_params
-                    expect(response.status).to eq 200
-                    expect(response).not_to redirect_to meeting_rooms_path
-                end
+  # ミーティングルーム削除
+  describe "DELETE #destroy" do
+    let!(:meeting_room) { create(:meeting_room) }
+    let!(:entry) { meeting_room.users << [user, other_user, therd_user] }
+    let!(:room_message) { meeting_room.room_messages.create(content: "テスト", user_id: user.id) }
+    let!(:other_meeting_room) { create(:meeting_room) }
 
-                # 無効なパラメータ(date)
-                it "Error invalid date" do
-                    post meeting_rooms_path, params: invalid_date_params
-                    expect(response.status).to eq 200
-                    expect(response).not_to redirect_to meeting_rooms_path
-                end
+    let(:meeting_rooms_header) { { "HTTP_REFERER" => meeting_rooms_url } }
+    let(:past_rooms_header) { { "HTTP_REFERER" => meeting_rooms_past_index_url } }
+    let(:invalid_header) { { "HTTP_REFERER" => root_path } }
+  
+    context "ログイン済" do
+      before { sign_in user }
 
-                # 無効なパラメータ(entries)
-                it "Error invalid entries" do
-                    post meeting_rooms_path, params: invalid_entries_params
-                    expect(response.status).to eq 200
-                    expect(response).not_to redirect_to meeting_rooms_path
-                end
-            end
+      context "ルーム一覧からの場合" do
+        context "パラメータが正の場合" do
+          subject {
+            delete meeting_room_path(meeting_room.public_uid),
+                   headers: meeting_rooms_header
+          }
 
-            context "Create" do
-                # 有効なパラメータ
-                it "Success valid params" do
-                    expect do
-                        post meeting_rooms_path, params: meeting_room_params
-                    end.to change { MeetingRoom.count }.by(1).and change { Entry.count }.by(3)
-                end
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 302
+          end
 
-                # 無効なパラメータ
-                it "Error invalid params" do
-                    expect do
-                        post meeting_rooms_path, params: invalid_name_params
-                    end.to change { MeetingRoom.count }.by(0).and change { Entry.count }.by(0)
-                end
-            end
+          it "ルームに関するデータが削除されること" do
+            expect do
+              subject
+            end.to change {
+              MeetingRoom.count
+            }.by(-1).and change {
+              Entry.count
+            }.by(-3).and change {
+              RoomMessage.count
+            }.by(-1)
+          end
+
+          it "ルーム一覧へリダイレクト" do
+            subject
+            expect(response).to redirect_to meeting_rooms_path
+          end
         end
+
+        context "パラメータのルームIDがエントリーしていないルームの場合" do
+          subject {
+            delete meeting_room_path(other_meeting_room.public_uid),
+                   headers: meeting_rooms_header
+          }
+
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 302
+          end
+
+          it "ルームに関するデータが削除されないこと" do
+            expect do
+              subject
+            end.to change {
+              MeetingRoom.count
+            }.by(0).and change {
+              Entry.count
+            }.by(0).and change {
+              RoomMessage.count
+            }.by(0)
+          end
+
+          it "ルーム一覧へリダイレクト" do
+            subject
+            expect(response).to redirect_to meeting_rooms_path
+          end
+        end
+      end
+
+      context "過去ルーム一覧からの場合" do
+        subject {
+          delete meeting_room_path(meeting_room.public_uid),
+                 headers: past_rooms_header
+        }
+
+        it "リクエスト成功" do
+          subject
+          expect(response.status).to eq 302
+        end
+
+        it "ルームに関するデータが削除されないこと" do
+          expect do
+            subject
+          end.to change {
+            MeetingRoom.count
+          }.by(-1).and change {
+            Entry.count
+          }.by(-3).and change {
+            RoomMessage.count
+          }.by(-1)
+        end
+
+        it "過去ルーム一覧へリダイレクト" do
+          subject
+          expect(response).to redirect_to meeting_rooms_past_index_path
+        end
+      end
+
+      context "ルーム一覧と過去ルーム一覧以外からの場合" do
+        subject {
+          delete meeting_room_path(meeting_room.public_uid),
+                 headers: invalid_header
+        }
+
+        it "リクエスト成功" do
+          subject
+          expect(response.status).to eq 302
+        end
+
+        it "ルームに関するデータが削除されないこと" do
+          expect do
+            subject
+          end.to change {
+            MeetingRoom.count
+          }.by(0).and change {
+            Entry.count
+          }.by(0).and change {
+            RoomMessage.count
+          }.by(0)
+        end
+
+        it "root_pathへリダイレクト" do
+          subject
+          expect(response).to redirect_to root_path
+        end
+      end
     end
 
+    context "未ログイン" do
+      subject {
+        delete meeting_room_path(meeting_room.public_uid),
+               headers: meeting_rooms_header
+      }
+
+      it "リクエスト成功" do
+        subject
+        expect(response.status).to eq 302
+      end
+
+      it "ルームに関するデータが削除されないこと" do
+        expect do
+          subject
+        end.to change {
+          MeetingRoom.count
+        }.by(0).and change {
+          Entry.count
+        }.by(0).and change {
+          RoomMessage.count
+        }.by(0)
+      end
+
+      it "ログインページへリダイレクト" do
+        subject
+        expect(response).to redirect_to new_user_session_path
+      end
+    end
+  end
 end

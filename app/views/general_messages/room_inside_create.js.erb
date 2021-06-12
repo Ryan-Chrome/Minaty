@@ -1,23 +1,23 @@
-<% if @current_user_send_message.present? %>
-    var room_message_container = document.getElementById("messages");
-    room_message_container.insertAdjacentHTML("beforeend", "<%= j(render "room_messages/outside_current_add_room_message") %>");
+<% if @receive_users.present? %>
+  var room_message_container = document.getElementById("messages");
+  room_message_container.insertAdjacentHTML("beforeend", "<%= j(render "room_messages/outside_current_add_room_message") %>");
 
-    var room_message_side = document.getElementById("room-message-container");
-    var outside_message_side = document.getElementById("outside-send-message-container");
-    var room_message_side_btn = document.getElementById("room-message");
-    var outside_message_side_btn = document.getElementById("outside-send-message-list");
+  var room_message_side = document.getElementById("room-message-container");
+  var outside_message_side = document.getElementById("outside-send-message-container");
+  var room_message_side_btn = document.getElementById("room-message");
+  var outside_message_side_btn = document.getElementById("outside-send-message-list");
 
-    outside_message_side_btn.classList.remove("active");
-    room_message_side_btn.classList.add("active");
-    outside_message_side.style.display = "none";
-    room_message_side.style.display = "inline-block";
+  outside_message_side_btn.classList.remove("active");
+  room_message_side_btn.classList.add("active");
+  outside_message_side.style.display = "none";
+  room_message_side.style.display = "inline-block";
 
-    room_message_container.scrollTop = room_message_container.scrollHeight;
+  room_message_container.scrollTop = room_message_container.scrollHeight;
 
-    var general_message_textarea = document.getElementById("general-message-textarea");
-    if(general_message_textarea.value){
-        general_message_textarea.value = "";
-    }
+  var general_message_textarea = document.getElementById("general-message-textarea");
+  if(general_message_textarea.value){
+    general_message_textarea.value = "";
+  }
 <% else %>
-    alert("メッセージの文字数か、送信先設定に不備があります。");
+  alert("メッセージの文字数か、送信先設定に不備があります。");
 <% end %>

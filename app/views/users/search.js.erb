@@ -1,0 +1,4 @@
+var users_table = document.getElementById("users-table-container");
+var table = users_table.getElementsByClassName("table")[0]
+table.remove();
+users_table.insertAdjacentHTML("beforeend", "<%= j(render "users_table") %>");

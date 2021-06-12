@@ -1,0 +1,30 @@
+<table class = "table" id = "myTable">
+  <thead>
+    <tr>
+      <th onclick = "w3.sortHTML('#myTable','.item','td:nth-child(1)')">所属 <i class="fas fa-sort"></i></th>
+      <th onclick = "w3.sortHTML('#myTable','.item','td:nth-child(2)')">ユーザー名 <i class="fas fa-sort"></i></th>
+      <th onclick = "w3.sortHTML('#myTable','.item','td:nth-child(3)')">カタカナ <i class="fas fa-sort"></i></th>
+      <th>アドレス</th>
+      <th onclick = "w3.sortHTML('#myTable','.item','td:nth-child(5)')">権限 <i class="fas fa-sort"></i></th>
+      <th>リンク</th>
+      <th>編集</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @users.each do |user| %>
+      <tr class = "item">
+        <td class = "department"><%= user.department.name %></td>
+        <td><%= user.name %></td>
+        <td><%= user.kana %></td>
+        <td><%= user.email %></td>
+        <% if user.admin? %>
+          <td class = "edit">管理</td>
+        <% else %>
+          <td class = "edit">一般</td>
+        <% end %>
+        <td class = "edit"><%= link_to "詳細", user_path(user.public_uid) %></td>
+        <td class = "edit"><%= link_to "編集", edit_other_user_registration_path(user.public_uid) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

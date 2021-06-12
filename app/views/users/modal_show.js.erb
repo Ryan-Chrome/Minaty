@@ -1,0 +1,140 @@
+<% if @other_user.present? && @other_user != current_user %>
+  <% #ユーザー検索ボックス経由 %>
+  var user_search_response_container = document.getElementById("user-search-response");
+  if(user_search_response_container){
+    <% #ユーザー検索結果 非表示 %>
+    user_search_response_container.style.display = "none";
+    <% #ユーザーページ 表示 %>
+    modal.insertAdjacentHTML("beforeend", "<%= j(render "users/modal_show") %>");
+    var other_user_content = document.getElementById("user-content");
+    other_user_content.style.display = "block";
+    var other_user_content_back_btn = document.getElementById("user-content-back-btn");
+    var other_user_content_close_btn = document.getElementById("user-content-close");
+    other_user_content_back_btn.onclick = () => {
+      var add_user_to_group = document.getElementById("add-user-to-group");
+      add_user_to_group.remove();
+      other_user_content.remove();
+      user_search_response_container.style.display = "block";
+    }
+    other_user_content_close_btn.onclick = () => {
+      var add_user_to_group = document.getElementById("add-user-to-group");
+      add_user_to_group.remove();
+      other_user_content.remove();
+      user_search_response_container.remove();
+      modal.style.display = "none";
+    }
+  } else {
+    <% #ユーザーサイドコンテナ経由 %>
+    <% #ユーザーページ 表示 %>
+    modal.style.display = "block";
+    modal.insertAdjacentHTML("beforeend", "<%= j(render "users/modal_show") %>");
+    var other_user_content = document.getElementById("user-content");
+    other_user_content.style.display = "block";
+    var other_user_content_back_btn = document.getElementById("user-content-back-btn");
+    var other_user_content_close_btn = document.getElementById("user-content-close");
+    other_user_content_back_btn.remove();
+    other_user_content_close_btn.onclick = () => {
+      var add_user_to_group = document.getElementById("add-user-to-group");
+      add_user_to_group.remove();
+      other_user_content.remove();
+      modal.style.display = "none";
+    }
+  }
+  <% #ユーザーページ　スケジュールBOX関連 %>
+  var number = Number("<%= @other_user_schedules.length %>");
+  for(var i=0; i < number; i++){
+    var schedule = document.getElementsByClassName(`user-content-schedule-box-${i}`);
+    var schedule_height = 0;
+    for(var s=0; s < schedule.length; s++){
+      if(i%2 == 0){
+        schedule[s].style.backgroundColor = "rgba(29, 29, 29, 0.9)";
+      } else {
+        schedule[s].style.backgroundColor = "rgba(37, 76, 109, 0.9)";
+      }
+      schedule_height += schedule[s].offsetHeight;
+    }
+    if(schedule_height < 40){
+      var schedule_time = document.getElementById(`other-user-schedule-time-${i}`);
+      var schedule_name = document.getElementById(`other-user-schedule-name-${i}`);
+      schedule_time.style.display = "none"
+      schedule_name.style.display = "none";
+      for(var s=0; s < schedule.length; s++){
+        schedule[s].classList.add("other-need-details");
+        if(s === 0){
+          var schedule_details_element = document.createElement("p");
+          schedule_details_element.setAttribute("id", `other-schedule-details-${i}`);
+          schedule_details_element.setAttribute("class", `other-schedule-details`);
+          var schedule_details_text_1 = document.createTextNode(`${schedule_name.textContent}`);
+          var schedule_details_text_2 = document.createElement("br");
+          var schedule_details_text_3 = document.createTextNode(`${schedule_time.textContent}`);
+          schedule_details_element.appendChild(schedule_details_text_1);
+          schedule_details_element.appendChild(schedule_details_text_2);
+          schedule_details_element.appendChild(schedule_details_text_3);
+          schedule[0].appendChild(schedule_details_element);
+        }
+        schedule[s].addEventListener("mouseover", (event) => {
+          var schedule_number = (event.target.classList[0].replace(/[^0-9]/g, ''));
+          var schedule_details = document.getElementById(`other-schedule-details-${schedule_number}`);
+          schedule_details.style.display = "block";
+        }, false);
+        schedule[s].addEventListener("mouseleave", (event) => {
+          var schedule_number = (event.target.classList[0].replace(/[^0-9]/g, ''));
+          var schedule_details = document.getElementById(`other-schedule-details-${schedule_number}`);
+          schedule_details.style.display = "none";
+        }, false);
+      }
+    }
+  }
+  <% #ユーザーページ チャットログ関連 %>
+  var other_user_chat_log = document.getElementById("chat-log");
+  other_user_chat_log.scrollTo(0, other_user_chat_log.scrollHeight);
+  var other_user_chat_page = 2;
+  var other_user_chat_total_page = $("#chat-log").data("other_page_count");
+  var other_user_chat_log = document.getElementById("chat-log");
+  var other_user_chat_scroll_height = other_user_chat_log.scrollHeight;
+  var other_user_chat_offset_height = other_user_chat_log.offsetHeight;
+  if(other_user_chat_offset_height == other_user_chat_scroll_height && other_user_chat_total_page > 1){
+    var other_user_chat_ajax_date = other_user_chat_log.getElementsByClassName("message-date")[0].id;
+    var other_user_chat_content_scroll = other_user_chat_log.scrollHeight;
+    $.ajax({
+      url: `/general_messages/other_user_chat_ajax?page=${other_user_chat_page}&other_user=<%= @other_user.public_uid %>&message_date=${other_user_chat_ajax_date}`
+    }).done(function(data) {
+      $("#chat-log").scrollTop(other_user_chat_log.scrollHeight - other_user_chat_content_scroll);
+      other_user_chat_page++;
+    });
+  }
+  $("#chat-log").scroll(function(){
+    if(($("#chat-log").scrollTop() == 0) && (other_user_chat_page <= Number(other_user_chat_total_page))){
+      var other_user_chat_ajax_date = other_user_chat_log.getElementsByClassName("message-date")[0].id;
+      var other_user_chat_content_scroll = other_user_chat_log.scrollHeight;
+      $.ajax({
+        url: `/general_messages/other_user_chat_ajax?page=${other_user_chat_page}&other_user=<%= @other_user.public_uid %>&message_date=${other_user_chat_ajax_date}`
+      }).done(function(data) {
+        $("#chat-log").scrollTop(other_user_chat_log.scrollHeight - other_user_chat_content_scroll);
+        other_user_chat_page++;
+      });
+    }
+  });
+  <% # コンタクトグループ追加フォーム関連 %>
+  var add_user_to_group = document.getElementById("add-user-to-group");
+  var add_user_group_btn = document.getElementById("add-group-btn");
+  add_user_group_btn.onclick = () => {
+    other_user_content.style.display = "none";
+    add_user_to_group.style.display = "block";
+  }
+  var add_user_to_group_back_btn = document.getElementById("add-user-to-group-back-btn");
+  var add_user_to_group_close_btn = document.getElementById("add-user-to-group-close");
+  add_user_to_group_back_btn.onclick = () => {
+    add_user_to_group.style.display = "none";
+    other_user_content.style.display = "block";
+  }
+  add_user_to_group_close_btn.onclick = () => {
+    add_user_to_group.remove();
+    other_user_content.remove();
+    var user_search_response_container = document.getElementById("user-search-response");
+    if(user_search_response_container){
+      user_search_response_container.remove();
+    }
+    modal.style.display = "none"
+  }
+<% end %>

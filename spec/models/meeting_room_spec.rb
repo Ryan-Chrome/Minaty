@@ -1,78 +1,84 @@
-require 'rails_helper'
+require "rails_helper"
 
-# ミーティングルームモデル関連テスト
 RSpec.describe MeetingRoom, type: :model do
+  # バリデーション関連
+  describe "Validation" do
+    let(:meeting_room) { build(:meeting_room) }
 
-    # バリデーション関連
-    describe "Validation" do
-
-        # 全てのカラムが正の場合
-        it "is valid with a user_id and name and start_time and end_time" do
-            expect(FactoryBot.build(:meeting_room)).to be_valid
-        end
-
-        # 名前が空の場合
-        it "is invalid without a name" do
-            expect(FactoryBot.build(:meeting_room, name: "")).not_to be_valid
-        end
-
-        # 名前が16文字以上の場合
-        it "is invalid when a name is 16 characters" do
-            expect(FactoryBot.build(:meeting_room, name: "#{"a" * 16}")).not_to be_valid
-        end
-
-        # 開始時刻が空の場合
-        it "is invalid without a start_time" do
-            expect(FactoryBot.build(:meeting_room, start_at: "")).not_to be_valid
-        end
-
-        # 終了時刻が空の場合
-        it "is invalid without a end_time" do
-            expect(FactoryBot.build(:meeting_room, finish_at: "")).not_to be_valid
-        end
-
-        # 開始時刻が終了時刻より遅い場合
-        it "is invalid meeting_start_end_check" do
-            expect(MeetingRoom.new(name: "会議", start_at: "2021-02-10 19:00:00", finish_at: "2021-02-10 15:00:00")).not_to be_valid
-        end
-
-        # 開始時刻と終了時刻の日付が違う場合
-        it "is invalid meeting_date_check" do
-            expect(MeetingRoom.new(name: "会議", start_at: "2021-02-10 12:00:00", finish_at: "2021-02-11 19:00:00")).not_to be_valid
-        end
-
-        # エントリーするユーザーが送られなかった場合
-        it "is invalid room_entry_users" do
-            expect(FactoryBot.build(:meeting_room, room_entry_users: "")).not_to be_valid
-        end
-
-        # コメントが400字以上の場合
-        it "is invalid comment" do
-            expect(FactoryBot.build(:meeting_room, comment: "#{"a" * 401}")).not_to be_valid
-        end
-
+    it "全てのカラムが正常" do
+      expect(meeting_room).to be_valid
     end
 
-    # アソシエーション関連
-    describe "Association" do
-
-        let!(:user){ create(:user) }
-        let!(:meeting_room){ create(:meeting_room) }
-
-        # ミーティングルーム削除時　エントリー削除
-        it "destroy with destroy entry" do
-            meeting_room.entries.create(user_id: user.id)
-            expect { meeting_room.destroy }.to change{ Entry.count }.by(-1)
-            sleep 0.5 #スリープないと次のテスト失敗する
-        end
-
-        # ミーティングルーム削除時　ルームメッセージ削除
-        it "destroy with destroy room_message" do
-            meeting_room.room_messages.create(user_id: user.id, content: "テスト")
-            expect { meeting_room.destroy }.to change{ RoomMessage.count }.by(-1)
-            sleep 0.5 #スリープないと次のテスト失敗する
-        end
-
+    it "ルーム名が空の場合" do
+      meeting_room.name = ""
+      expect(meeting_room).not_to be_valid
     end
 
+    it "ルーム名が15文字より長い場合" do
+      meeting_room.name = "#{"a" * 16}"
+      expect(meeting_room).not_to be_valid
+    end
+
+    it "コメントが400文字より長い場合" do
+      meeting_room.comment = "#{"a" * 401}"
+      expect(meeting_room).not_to be_valid
+    end
+
+    it "開始時刻が空の場合" do
+      meeting_room.start_at = ""
+      expect(meeting_room).not_to be_valid
+    end
+
+    it "終了時刻が空の場合" do
+      meeting_room.finish_at = ""
+      expect(meeting_room).not_to be_valid
+    end
+
+    it "開始時刻が終了時刻より遅い場合" do
+      meeting_room.start_at = "#{Date.today} 19:00:00"
+      meeting_room.finish_at = "#{Date.today} 15:00:00"
+      expect(meeting_room).not_to be_valid
+    end
+
+    it "開始時刻と終了時刻の日付が違う場合" do
+      meeting_room.start_at = "#{Date.today} 12:00:00"
+      meeting_room.finish_at = "#{Date.today + 5.day} 19:00:00"
+      expect(meeting_room).not_to be_valid
+    end
+
+    it "日付が空の場合" do
+      meeting_room.meeting_date = ""
+      expect(meeting_room).not_to be_valid
+    end
+
+    it "日付が今日より前の場合" do
+      meeting_room.meeting_date = Date.parse("#{Date.today - 1.day}")
+      expect(meeting_room).not_to be_valid
+    end
+
+    it "エントリーするユーザーがない場合" do
+      meeting_room.room_entry_users = ""
+      expect(meeting_room).not_to be_valid
+    end
+  end
+
+  # アソシエーション関連
+  describe "Association" do
+    let!(:human_resources_dept) { create(:human_resources_dept) }
+    let!(:user) { create(:user, department_id: human_resources_dept.id) }
+    let!(:meeting_room) { create(:meeting_room) }
+    let!(:entry) { meeting_room.users << user }
+    let!(:room_message) { meeting_room.room_messages.create(user_id: user.id, content: "テスト") }
+
+    it "ルーム削除時、エントリー削除とルームメッセージ削除" do
+      expect { 
+        meeting_room.destroy 
+      }.to change {
+        Entry.count
+      }.by(-1).and change {
+        RoomMessage.count
+      }.by(-1)
+      sleep 0.5 #スリープないと次のテスト失敗する
+    end
+  end
 end

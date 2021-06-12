@@ -1,61 +1,59 @@
 <div id = "common-container">
-    <div id = "side-menu">
-        <%= render "homes/side_menu" %>
-    </div>
-    <div id = "rooms-menu">
-        <%= link_to "ルーム一覧", meeting_rooms_path, id: "rooms-link", data: {"turbolinks"=>false} %>
-        <span id = "past-rooms-link" style = "border-bottom: 5px solid #2196f3;">過去ルーム一覧</span>
-        <%= link_to "新規作成", new_meeting_room_path, id: "new-room-link", data: {"trubolinks"=>false} %>
-        <div id = "menu-search-box">
-            <%= form_with url: meeting_rooms_past_index_path, local: true, method: :get do |f| %>
-                <%= f.label :name, "内容検索" %>
-                <%= f.text_field :name %>
+  <div id = "rooms-menu">
+    <%= link_to "ルーム一覧", meeting_rooms_path, id: "rooms-link" %>
+    <span id = "past-rooms-link" style = "border-bottom: 5px solid #2196f3;">過去ルーム一覧</span>
+    <%= link_to "新規作成", new_meeting_room_path, id: "new-room-link" %>
+    <div id = "menu-search-box">
+      <%= form_with url: meeting_rooms_past_index_path, local: true, method: :get do |f| %>
+        <%= f.label :name, "内容検索" %>
+        <%= f.text_field :name %>
 
-                <%= f.label :date, "日付検索" %>
-                <%= f.date_field :date %>
+        <%= f.label :date, "日付検索" %>
+        <%= f.date_field :date %>
 
-                <%= f.submit "検索", id: "button" %>
-            <% end %>
-        </div>
+        <%= f.submit "検索", id: "button" %>
+      <% end %>
     </div>
-    <div id = "rooms-container">
-        <% if @past_rooms.present? %>
-            <ul>
-                <% room_date = "foo" %>
-                <% @past_rooms.each do |room| %>
-                    <% if room_date != room.start_at.strftime("%m月%d日") %>
-                        <% room_date = room.start_at.strftime("%m月%d日") %>
-                        <li class = "room-date-head"><%= room_date %></li>
-                    <% end %>
-                    <li class = "room-content">
-                        <span class = "room-status" style = "background: red;">終了</span>
-                        <span class = "room-time"><%= room.start_at.strftime("%m月%d日") %> <%= "#{room.start_at.strftime("%H:%M")}~#{room.finish_at.strftime("%H:%M")}" %></span>
-                        <%= link_to "ルームへ", meeting_room_path(room.public_uid), data: {"turbolinks"=>false}, class: "room-link" %>
-                        <div class = "room-details">
-                            <span class = "room-name">・<%= room.name %></span>
-                            <div class = "room-comment">
-                                <p>
-                                    <% if room.comment.present? %>
-                                        <%= safe_join(room.comment.split("\n"), tag(:br)) %>
-                                    <% else %>
-                                        コメントなし
-                                    <% end %>
-                                </p>
-                            </div>
-                            <div class = "room-users">
-                                <span class = "room-users-h">参加ユーザー</span>
-                                <div>
-                                    <% room.users.each do |user| %>
-                                        <span>・<%= user.name %></span>
-                                    <% end %>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                <% end %>
-            </ul>
-        <% else %>
-            <span id = "no-rooms">該当するルームが存在しません</span>
+  </div>
+  <div id = "rooms-container">
+    <% if @past_rooms.present? %>
+      <ul>
+        <% room_date = "foo" %>
+        <% @past_rooms.each do |room| %>
+          <% if room_date != room.start_at.strftime("%m月%d日") %>
+            <% room_date = room.start_at.strftime("%m月%d日") %>
+            <li class = "room-date-head"><%= room_date %></li>
+          <% end %>
+          <li class = "room-content">
+            <span class = "room-status" style = "background: red;">終了</span>
+            <span class = "room-time"><%= room.start_at.strftime("%m月%d日") %> <%= "#{room.start_at.strftime("%H:%M")}~#{room.finish_at.strftime("%H:%M")}" %></span>
+            <%= link_to "ルームへ", meeting_room_path(room.public_uid), data: {"turbolinks"=>false}, class: "room-link" %>
+            <%= link_to "ルーム削除", meeting_room_path(room.public_uid), class: "room-delete-link", method: :delete, data: { confirm: "ルーム名: #{room.name}を削除しますか？" } %>
+            <div class = "room-details">
+              <span class = "room-name">・<%= room.name %></span>
+              <div class = "room-comment">
+                <p>
+                  <% if room.comment.present? %>
+                    <%= safe_join(room.comment.split("\n"), tag(:br)) %>
+                  <% else %>
+                    コメントなし
+                  <% end %>
+                </p>
+              </div>
+              <div class = "room-users">
+                <span class = "room-users-h">参加ユーザー</span>
+                <div>
+                  <% room.users.each do |user| %>
+                    <span>・<%= user.name %></span>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </li>
         <% end %>
-    </div>
+      </ul>
+    <% else %>
+      <span id = "no-rooms">該当するルームが存在しません</span>
+    <% end %>
+  </div>
 </div>

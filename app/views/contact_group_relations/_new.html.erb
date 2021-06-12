@@ -1,21 +1,21 @@
 <div id = "add-user-to-group">
-    <div id = "add-user-to-group-top-bar" class = "modal-top-bar">
-        <ul>
-            <li id = "add-user-to-group-back-btn" class = "topbar-back-btn"><span>⬅︎</span></li>
-            <li id = "add-user-to-group-header" class = "topbar-header">グループ追加</li>
-            <li id = "add-user-to-group-close" class = "topbar-close-btn"><span>＋</span></li>
-        </ul>
-    </div>
-    <h6 id = "add-user">追加するユーザー： <%= @add_user.name %></h6>
-    <% if @group_list.present? %>
-        <%= form_with(model: @new_group_relation) do |f| %>
-            <%= f.hidden_field :user_id, value: @add_user.public_uid %>
-            <%= f.label :contact_group_id, "グループ名" %>
-            <%= f.select :contact_group_id, @group_list %>
+  <div id = "add-user-to-group-top-bar" class = "modal-top-bar">
+    <ul>
+      <li id = "add-user-to-group-back-btn" class = "topbar-back-btn"><span>⬅︎</span></li>
+      <li id = "add-user-to-group-header" class = "topbar-header">グループ追加</li>
+      <li id = "add-user-to-group-close" class = "topbar-close-btn"><span>＋</span></li>
+    </ul>
+  </div>
+  <h6 id = "add-user">追加するユーザー： <%= @other_user.name %></h6>
+  <% if @group_list.present? %>
+    <%= form_with(model: @new_group_relation) do |f| %>
+      <%= f.hidden_field :user_id, value: @other_user.public_uid %>
+      <%= f.label :contact_group_id, "グループ名" %>
+      <%= f.select :contact_group_id, @group_list %>
 
-            <%= f.submit "追加", class: "group-add-user-btn", id: "group-relation-submit" %>
-        <% end %>
-    <% else %>
-        <span id = "add-group-list-non-text">選択できるグループがありません</span>
+      <%= f.submit "追加", class: "group-add-user-btn", id: "group-relation-submit" %>
     <% end %>
+  <% else %>
+    <span id = "add-group-list-non-text">選択できるグループがありません</span>
+  <% end %>
 </div>

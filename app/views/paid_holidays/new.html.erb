@@ -1,21 +1,18 @@
 <div id = "common-container">
-    <div id = "side-menu">
-        <%= render "homes/side_menu" %>
-    </div>
-    <div id = "paid-holiday-form">
-        <h1>有給休暇申請</h1>
-        <%= form_with model: @new_paid_holiday, local: true, method: :post do |f| %>
-            <div class = "form-field">
-                <%= f.label :holiday_on, "取得日" %>
-                <%= f.date_field :holiday_on, value: Date.today %>
-            </div>
+  <div id = "paid-holiday-form">
+    <h1>有給休暇申請</h1>
+    <%= form_with model: @new_paid_holiday, local: true, method: :post do |f| %>
+      <div class = "form-field">
+        <%= f.label :holiday_on, "取得日" %>
+        <%= f.date_field :holiday_on, value: Date.today %>
+      </div>
 
-            <div class = "form-field">
-                <%= f.label :reason, "取得理由" %>
-                <%= f.text_area :reason %>
-            </div>
+      <div class = "form-field">
+        <%= f.label :reason, "取得理由" %>
+        <%= f.text_area :reason %>
+      </div>
 
-            <%= f.submit "申請", class: "btn" %>
-        <% end %>
-    </div>
+      <%= f.submit "申請", class: "btn" %>
+    <% end %>
+  </div>
 </div>

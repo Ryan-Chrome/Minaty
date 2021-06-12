@@ -1,463 +1,271 @@
-<% if user_signed_in? %>
-    <div id = "common-container">
-        <div id = "timer-container">
-            <div id = "timer-content">
-                <div id = "timer-menu">
-                    <div id = "timer-start">
-                        start <i class="far fa-play-circle"></i>
-                    </div>
-                    <div id = "timer-stop">
-                        stop <i class="far fa-stop-circle"></i>
-                    </div>
-                    <div id = "timer-reset">
-                        reset <i class="fas fa-sync-alt"></i>
-                    </div>
-                </div>
-                <div id = "timer">
-                    00：00：00
-                </div>
-            </div>
-            <div id = "timer-start-time-content">
-                <%= link_to schedules_add_timer_path(start_time: "", end_time: ""), id: "timer-schedule-link" ,remote: true do %>
-                    <span id = "timer-add-schedule"><i class="fas fa-calendar-alt"></i> Add</span>
-                <% end %>
-                <span id = "timer-start-time">TIME</span>
-            </div>
-        </div>
-        <div id = "Modal">
-        </div>
-        <div id = "side-menu">
-            <%= render "homes/side_menu" %>
-        </div>
-        <div id = "meeting-room-sidebar">
-            <% if @meeting_room.finish_at > DateTime.now %>
-                <!-- マイクミュートブロック -->
-                <div class = "room-sidebar-content" id = "audio-no-mute">
-                    <i class="fas fa-microphone"></i>
-                    <div class = "room-sidebar-detail">マイクミュート</div>
-                </div>
-                
-                <div class = "room-sidebar-content" id = "audio-mute" style = "display: none;">
-                    <i class="fas fa-microphone-slash"></i>
-                    <div class = "room-sidebar-detail">マイクミュート解除</div>
-                </div>
-    
-                <!-- ビデオミュートブロック -->
-                <div class = "room-sidebar-content" id = "video-no-mute">
-                    <i class="fas fa-video"></i>
-                    <div class = "room-sidebar-detail">ビデオミュート</div>
-                </div>
-
-                <div class = "room-sidebar-content" id = "video-mute" style = "display: none;">
-                    <i class="fas fa-video-slash"></i>
-                    <div class = "room-sidebar-detail">ビデオミュート解除</div>
-                </div>
-            <% end %>
-            <!-- エントリーユーザーブロック -->
-            <div class = "room-sidebar-content toggle-btn" id = "room-users">
-                <i class="fas fa-users"></i>
-                <div class = "room-sidebar-detail">エントリーユーザー</div>
-            </div>
-            <% if @meeting_room.finish_at > DateTime.now %>
-                <!-- ユーザー招待ブロック -->
-                <div class = "room-sidebar-content toggle-btn" id = "room-invitation">
-                    <i class="fas fa-user-plus"></i>
-                    <div class = "room-sidebar-detail">ユーザー招待</div>
-                </div>
-            <% end %>
-            <!-- ルームメッセージブロック -->
-            <div class = "room-sidebar-content toggle-btn" id = "room-message">
-                <i class="fas fa-comments"></i>
-                <div class = "room-sidebar-detail">ルームメッセージ</div>
-            </div>
-            <% if @meeting_room.finish_at > DateTime.now %>
-                <!-- 外部メッセージブロック -->
-                <div class = "room-sidebar-content toggle-btn" id = "outside-send-message-list">
-                    <i class="fas fa-envelope"></i>
-                    <div class = "room-sidebar-detail">外部メッセージ</div>
-                </div>
-                <!-- コンフィグブロック -->
-                <div class = "room-sidebar-content toggle-btn" id = "video-config">
-                    <i class="fas fa-cog"></i>
-                    <div class = "room-sidebar-detail">設定</div>
-                </div>
-                <!-- 一時退出ブロック -->
-                <%= link_to meeting_room_path(@meeting_room.public_uid), data: {"turbolinks" => false} do %>
-                    <div class = "room-sidebar-content" id = "room-leave-btn">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <div class = "room-sidebar-detail">一時退出</div>
-                    </div>
-                <% end %>
-            <% end %>
-        </div>
-        <div id = "room-users-container" class = "room-users">
-            <h6>ユーザーリスト</h6>
-            <ul id = "room-users-list">
-                <li>
-                    <span class = "user-name"><%= current_user.name %></span>
-                    <span class = "user-status" id = "user-status-<%= current_user.public_uid %>"><i class="fas fa-circle"></i></span>
-                </li>
-                <% @room_users.each do |user| %>
-                    <% if user != current_user %>
-                        <li>
-                            <span class = "user-name"><%= user.name %></span>
-                            <span class = "user-status" id = "user-status-<%= user.public_uid %>"><i class="fas fa-circle"></i></span>
-                            <span class = "user-microphone" id = "user-microphone-<%= user.public_uid %>"><i class="fas fa-microphone"></i></span>
-                        </li>
-                    <% end %>
-                <% end %>
-            </ul>
-        </div>
-        <div id = "room-invitation-container" class = "room-invitation">
-            <h6>参加ユーザー追加</h6>
-            <ul id = "invitation-users-list">
-                <% @users.each do |user| %>
-                    <% if !@room_users.include?(user) %>
-                        <li id = "invitation-user-<%= user.public_uid %>">
-                            <span class = "user-name"><%= user.name %></span>
-                            <div class = "user-entry-form">
-                                <%= form_with(model: Entry.new, remote: true) do |f| %>
-                                    <%= f.hidden_field :user_id, value: user.public_uid, id: "entry_user_id_#{user.public_uid}" %>
-                                    <%= f.hidden_field :meeting_room_id, value: @meeting_room.public_uid, id: "entry_meeting_room_id_#{user.public_uid}" %>
-                                    <%= f.submit "追加" %>
-                                <% end %>
-                            </div>
-                        </li>
-                    <% end %>
-                <% end %>
-            </ul>
-        </div>
-        <div id = "room-message-container" class = "room-message">
-            <h6>ルームチャット</h6>
-            <div id = "messages" data-message_id = "<%= current_user.public_uid %>">
-                <% if @room_messages.present? %>
-                    <% @room_messages.each do |message| %>
-                        <% if message.user == current_user %>
-                            <div class = "message-content current">
-                                <span class = message-name><%= message.user.name %></span>
-                                <div class = "message"><%= safe_join(message.content.split("\n"), tag(:br)) %></div>
-                                <span class = "message-data"><%= l message.created_at %></span>
-                            </div>
-                        <% else %>
-                            <div class = "message-content other">
-                                <span class = message-name><%= message.user.name %></span>
-                                <div class = "message"><%= safe_join(message.content.split("\n"), tag(:br)) %></div>
-                                <span class = "message-data"><%= l message.created_at %></span>
-                            </div>
-                        <% end %>
-                    <% end %>
-                <% end %>
-            </div>
-            <div id = "message-form">
-                <%= form_with(model: @new_message, remote: true) do |f| %>
-                    <%= f.hidden_field :meeting_room_id, value: @meeting_room.public_uid %>
-                    <%= f.text_area :content, id: "room-message-textarea" %>
-                    <%= f.submit "送信", class: "message-btn" %>
-                <% end %>
-            </div>
-        </div>
-        <div id = "outside-send-message-container" class = "outside-send-message-list">
-            <h6>外部メッセージ送信</h6>
-            <div id = "general-message-user-list">
-                <% @departments.each do |department| %>
-                    <div class = "group-container">
-                        <div class = "group-head">
-                            <%= department.department %>
-                        </div>
-                        <ul class = "group-list">
-                            <% @users.each do |user| %>
-                                <% if user != current_user %>
-                                    <% if user.department == department.department %>
-                                        <li class = "select-user select-user-<%= user.public_uid %>" data-select_user = "<%= user.public_uid %>"><%= user.name %></li>
-                                    <% end %>
-                                <% end %>
-                            <% end %>
-                        </ul>
-                    </div>
-                <% end %>
-                <% @contact_groups.each do |group| %>
-                    <div class = "group-container">
-                        <div class = "group-head">
-                            <%= group.name %>
-                        </div>
-                        <ul class = "group-list">
-                            <% group.contact_group_relations.each do |relation| %>
-                                <li class = "select-user select-user-<%= relation.user.public_uid %>" data-select_user = "<%= relation.user.public_uid %>"><%= relation.user.name %></li>
-                            <% end %>
-                        </ul>
-                    </div>
-                <% end %>
-            </div>
-            <div id = "outside-send-message-form">
-                <%= form_with(model: @new_general_message, url: general_messages_multiple_create_path) do |f| %>
-                    <div id = "chat-send-users-form-list">
-                        
-                    </div>
-                    <%= f.text_area :content, id: "general-message-textarea" %>
-                    <%= f.submit "送信", class: "message-btn" %>
-                <% end %>
-            </div>
-        </div>
-        <div id = "video-config-container" class = "video-config">
-            <h6>映像・マイク変更</h6>
-            <div id = device-config-form>
-                
-            </div>
-        </div>
-        <% if @meeting_room.finish_at > DateTime.now %>
-            <div id = "meeting-room" data-room_id = "<%= @meeting_room.public_uid %>">
-                <%= render "meeting_rooms/room_setting" %>
-            </div>
-        <% else %>
-            <div id = "meeting-room" data-room_id = "<%= @meeting_room.public_uid %>">
-                <div id = "inactive-room">
-                    <i class="fas fa-door-open" id = "door"></i>
-                    <i class="far fa-times-circle" id = "door-invalid"></i>
-                    <span>ミーティングは終了しています。</span>
-                </div>
-            </div>
-        <% end %>
-    </div>
-
+<div id = "common-container">
+  <div id = "timer-container">
+    <%= render "shared/timer" %>
+  </div>
+  <div id = "Modal">
+  </div>
+  <div id = "meeting-room-sidebar">
     <% if @meeting_room.finish_at > DateTime.now %>
-        <script>
-            var modal = document.getElementById("Modal");
-            const Peer = window.Peer;
+      <!-- マイクミュートブロック -->
+      <div class = "room-sidebar-content" id = "audio-no-mute">
+        <i class="fas fa-microphone"></i>
+        <div class = "room-sidebar-detail">マイクミュート</div>
+      </div>
+      
+      <div class = "room-sidebar-content" id = "audio-mute" style = "display: none;">
+        <i class="fas fa-microphone-slash"></i>
+        <div class = "room-sidebar-detail">マイクミュート解除</div>
+      </div>
 
-            (async function room_setting(){
-                const myVideo = document.getElementById("my-video");
-                const video_select = document.getElementById("video-select");
-                const audio_select = document.getElementById("audio-select");
-                const device_select = document.getElementsByClassName("device-select");
+      <!-- ビデオミュートブロック -->
+      <div class = "room-sidebar-content" id = "video-no-mute">
+        <i class="fas fa-video"></i>
+        <div class = "room-sidebar-detail">ビデオミュート</div>
+      </div>
 
-                // デバイス取得
-                let optionStream = await navigator.mediaDevices.getUserMedia({
-                    audio: true,
-                    video: true
-                });
-        
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                
-                //　デバイス選択追加
-                for(var i=0; i < devices.length;i++){
-                    if(devices[i].kind == "videoinput"){
-                        let option = document.createElement("option");
-                        option.setAttribute("value", devices[i].deviceId);
-                        option.innerHTML = devices[i].label;
-                        video_select.appendChild(option);
-                    } else if(devices[i].kind == "audioinput"){
-                        let option = document.createElement("option");
-                        option.setAttribute("value", devices[i].deviceId);
-                        option.innerHTML = devices[i].label;
-                        audio_select.appendChild(option);
-                    }
-                }
-
-                const changeDevice = (e) => {
-                    if(video_select.value != "" && audio_select.value != "" && video_select.value != "display"){
-                        let Stream = navigator.mediaDevices.getUserMedia({
-                            audio: {deviceId: audio_select.value},
-                            video: {deviceId: video_select.value}
-                        }).then((stream)=> {
-                            myVideo.muted = true;
-                            myVideo.srcObject = stream;
-                            myVideo.playsInline = true;
-                            myVideo.play().catch(console.error);
-                        });
-                    } else if(video_select.value == "display" && audio_select.value != ""){
-                        let Stream = navigator.mediaDevices.getDisplayMedia({
-                            audio: {deviceId: audio_select.value},
-                            video: true
-                        }).then((stream)=> {
-                            myVideo.muted = true;
-                            myVideo.srcObject = stream;
-                            myVideo.playsInline = true;
-                            myVideo.play().catch(console.error);
-                        });
-                    }
-                }       
-                
-                // ビデオデバイス切替
-                for(var i=0; i < device_select.length; i++){
-                    device_select[i].addEventListener("change", changeDevice);
-                }
-
-                // Peerインスタンス作成 
-                const peer = (window.peer = new Peer({
-                    key: "<%= ENV["API_KEY"] %>",
-                    debug: 3
-                }));
-
-            })();
-
-            // サイドバー展開
-            var meeting_room_container = document.getElementById("meeting-room");
-            var toggle_btn = document.getElementsByClassName("toggle-btn");
-            var message_container = document.getElementById("room-message-container");
-            const toggleBtnMove = (e) => {
-                var target_opener = document.getElementsByClassName(`${e.target.id}`)[0];
-                if(e.target.classList.contains("active")){
-                    target_opener.style.display = "none";
-                    e.target.classList.remove("active");
-                    meeting_room_container.style.width = "calc(100% - 50px)";
-                } else {
-                    var activeElm = document.getElementsByClassName("active")[0];
-                    if(activeElm){
-                        var close_target_opener = document.getElementsByClassName(`${activeElm.id}`)[0];
-                        close_target_opener.style.display = "none";
-                        activeElm.classList.remove("active");
-                        target_opener.style.display = "inline-block";
-                        e.target.classList.add("active");
-                        if(target_opener == message_container){
-                            var messages = document.getElementById("messages");
-                            messages.scrollTop = messages.scrollHeight;
-                        }
-                    } else {
-                        target_opener.style.display = "inline-block";
-                        e.target.classList.add("active");
-                        meeting_room_container.style.width = "calc(85% - 50px)";
-                        if(target_opener == message_container){
-                            var messages = document.getElementById("messages");
-                            messages.scrollTop = messages.scrollHeight;
-                        }
-                    }
-                }
-            }
-
-            for(var i=0; i < toggle_btn.length;i++){
-                toggle_btn[i].addEventListener("click", toggleBtnMove);
-            }
-
-            // サイドバーデバイスミュート関連
-            var audio_btn = document.getElementById("audio-mute");
-            var audio_no_btn = document.getElementById("audio-no-mute");
-            var video_btn = document.getElementById("video-mute");
-            var video_no_btn = document.getElementById("video-no-mute")
-            audio_no_btn.onclick = () => {
-                audio_no_btn.style.display = "none";
-                audio_btn.style.display = "block";
-            }
-            audio_btn.onclick = () => {
-                audio_no_btn.style.display = "block";
-                audio_btn.style.display = "none";
-            }
-            video_no_btn.onclick = () => {
-                video_no_btn.style.display = "none";
-                video_btn.style.display = "block";
-            }
-            video_btn.onclick = () => {
-                video_no_btn.style.display = "block";
-                video_btn.style.display = "none";
-            }
-
-            // ユーザーリストマイクミュートボタン
-            var user_microphones = document.getElementsByClassName("user-microphone");
-            const mutedOtherUserMicrophone = (e) => {
-                var user_list = e.target.parentNode;
-                if(user_list){
-                    var target_video = document.getElementById(`video-${user_list.id}`);
-                    if(target_video){
-                        if(target_video.muted){
-                            target_video.muted = false;
-                            e.target.style.color = "white";
-                        } else {
-                            target_video.muted = true;
-                            e.target.style.color = "red";
-                        }
-                    }
-                }
-            }
-
-            for(var i=0; i < user_microphones.length;i++){
-                user_microphones[i].addEventListener("click", mutedOtherUserMicrophone);
-            }
-            
-            // メッセージユーザーリスト
-            var general_message_user_list = document.getElementsByClassName("group-head");
-            const openUserList = (e) => {
-                var list = e.target.nextElementSibling;
-                if(list.style.display == "block"){
-                    list.style.display = "none";
-                } else {
-                    list.style.display = "block";
-                }
-            }
-            for(var i=0; i < general_message_user_list.length;i++){
-                general_message_user_list[i].addEventListener("click", openUserList);
-            }
-
-            var general_message_select_user = document.getElementsByClassName("select-user");
-            var general_message_select_form = document.getElementById("chat-send-users-form-list");
-            const selectUser = (e) => {
-                var select_user_id = e.target.getAttribute("data-select_user");
-                var select_user_li = document.getElementsByClassName(`select-user-${select_user_id}`);
-                if(e.target.style.background == "white"){
-                    var remove_general_message_form_element = document.getElementById(`general_message_user_${select_user_id}`);
-                    remove_general_message_form_element.remove();
-                } else {
-                    var general_message_form_element = document.createElement("input");
-                    general_message_form_element.setAttribute("type", "hidden");
-                    general_message_form_element.setAttribute("name", "general_message_send_users[]");
-                    general_message_form_element.setAttribute("value", `${select_user_id}`);
-                    general_message_form_element.setAttribute("id", `general_message_user_${select_user_id}`);
-                    general_message_select_form.appendChild(general_message_form_element);
-                }
-                for(var i=0; i < select_user_li.length;i++){
-                    if(select_user_li[i].style.background == "white"){
-                        select_user_li[i].style.background = "";
-                        select_user_li[i].style.color = "white";
-                        select_user_li[i].style.fontWeight = "";
-                    } else {
-                        select_user_li[i].style.background = "white";
-                        select_user_li[i].style.color = "black";
-                        select_user_li[i].style.fontWeight = "bold";
-                    }
-                }
-            }
-            for(var i=0; i < general_message_select_user.length;i++){
-                general_message_select_user[i].addEventListener("click", selectUser);
-            }
-
-        </script>
-    <% else %>
-        <script>
-            // サイドバー展開
-            var meeting_room_container = document.getElementById("meeting-room");
-            var toggle_btn = document.getElementsByClassName("toggle-btn");
-            var message_container = document.getElementById("room-message-container");
-            const toggleBtnMove = (e) => {
-                var target_opener = document.getElementsByClassName(`${e.target.id}`)[0];
-                if(e.target.classList.contains("active")){
-                    target_opener.style.display = "none";
-                    e.target.classList.remove("active");
-                    meeting_room_container.style.width = "calc(100% - 50px)";
-                } else {
-                    var activeElm = document.getElementsByClassName("active")[0];
-                    if(activeElm){
-                        var close_target_opener = document.getElementsByClassName(`${activeElm.id}`)[0];
-                        close_target_opener.style.display = "none";
-                        activeElm.classList.remove("active");
-                        target_opener.style.display = "inline-block";
-                        e.target.classList.add("active");
-                        if(target_opener == message_container){
-                            var messages = document.getElementById("messages");
-                            messages.scrollTop = messages.scrollHeight;
-                        }
-                    } else {
-                        target_opener.style.display = "inline-block";
-                        e.target.classList.add("active");
-                        meeting_room_container.style.width = "calc(85% - 50px)";
-                        if(target_opener == message_container){
-                            var messages = document.getElementById("messages");
-                            messages.scrollTop = messages.scrollHeight;
-                        }
-                    }
-                }
-            }
-
-            for(var i=0; i < toggle_btn.length;i++){
-                toggle_btn[i].addEventListener("click", toggleBtnMove);
-            }
-        </script>
+      <div class = "room-sidebar-content" id = "video-mute" style = "display: none;">
+        <i class="fas fa-video-slash"></i>
+        <div class = "room-sidebar-detail">ビデオミュート解除</div>
+      </div>
     <% end %>
+    <!-- エントリーユーザーブロック -->
+    <div class = "room-sidebar-content toggle-btn" id = "room-users">
+      <i class="fas fa-users"></i>
+      <div class = "room-sidebar-detail">エントリーユーザー</div>
+    </div>
+    <% if @meeting_room.finish_at > DateTime.now %>
+      <!-- ユーザー招待ブロック -->
+      <div class = "room-sidebar-content toggle-btn" id = "room-invitation">
+        <i class="fas fa-user-plus"></i>
+        <div class = "room-sidebar-detail">ユーザー招待</div>
+      </div>
+    <% end %>
+    <!-- チャットブロック -->
+    <div class = "room-sidebar-content toggle-btn" id = "room-message">
+      <span id = "room-chat-notice" style = "display: none;">●</span>
+      <i class="fas fa-comments"></i>
+      <div class = "room-sidebar-detail">チャット</div>
+    </div>
+    <% if @meeting_room.finish_at > DateTime.now %>
+      <!-- 外部メッセージブロック -->
+      <div class = "room-sidebar-content toggle-btn" id = "outside-send-message-list">
+        <i class="fas fa-envelope"></i>
+        <div class = "room-sidebar-detail">外部メッセージ</div>
+      </div>
+      <!-- コンフィグブロック -->
+      <div class = "room-sidebar-content toggle-btn" id = "video-config">
+        <i class="fas fa-cog"></i>
+        <div class = "room-sidebar-detail">設定</div>
+      </div>
+      <!-- 一時退出ブロック -->
+      <%= link_to meeting_room_path(@meeting_room.public_uid), data: {"turbolinks" => false} do %>
+        <div class = "room-sidebar-content" id = "room-leave-btn">
+          <i class="fas fa-sign-out-alt"></i>
+          <div class = "room-sidebar-detail">一時退出</div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+  <div id = "room-users-container" class = "room-users">
+    <h6>ユーザーリスト</h6>
+    <ul id = "room-users-list">
+      <li>
+        <span class = "user-name"><%= current_user.name %></span>
+        <span class = "user-status" id = "user-status-<%= current_user.public_uid %>"><i class="fas fa-circle"></i></span>
+      </li>
+      <% @room_users.each do |user| %>
+        <% if user != current_user %>
+          <li>
+            <span class = "user-name"><%= user.name %></span>
+            <span class = "user-status" id = "user-status-<%= user.public_uid %>"><i class="fas fa-circle"></i></span>
+            <span class = "user-microphone" id = "user-microphone-<%= user.public_uid %>"><i class="fas fa-microphone"></i></span>
+          </li>
+        <% end %>
+      <% end %>
+    </ul>
+  </div>
+  <div id = "room-invitation-container" class = "room-invitation">
+    <h6>参加ユーザー追加</h6>
+    <ul id = "invitation-users-list">
+      <% @users.each do |user| %>
+        <% if !@room_users.include?(user) %>
+          <li id = "invitation-user-<%= user.public_uid %>">
+            <span class = "user-name"><%= user.name %></span>
+            <div class = "user-entry-form">
+              <%= form_with(model: Entry.new, remote: true) do |f| %>
+                <%= f.hidden_field :user_id, value: user.public_uid, id: "entry_user_id_#{user.public_uid}" %>
+                <%= f.hidden_field :meeting_room_id, value: @meeting_room.public_uid, id: "entry_meeting_room_id_#{user.public_uid}" %>
+                <%= f.submit "追加" %>
+              <% end %>
+            </div>
+          </li>
+        <% end %>
+      <% end %>
+    </ul>
+  </div>
+  <div id = "room-message-container" class = "room-message" style = "display: none;">
+    <h6>チャット</h6>
+    <div id = "messages" data-message_id = "<%= current_user.public_uid %>">
+      <% if @room_messages.present? %>
+        <% @room_messages.each do |message| %>
+          <% if message.user == current_user %>
+            <div class = "message-content current">
+              <span class = message-name><%= message.user.name %></span>
+              <div class = "message"><%= safe_join(message.content.split("\n"), tag(:br)) %></div>
+              <span class = "message-data"><%= l message.created_at %></span>
+            </div>
+          <% else %>
+            <div class = "message-content other">
+              <span class = message-name><%= message.user.name %></span>
+              <div class = "message"><%= safe_join(message.content.split("\n"), tag(:br)) %></div>
+              <span class = "message-data"><%= l message.created_at %></span>
+            </div>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+    <div id = "message-form">
+      <%= form_with(model: @new_message, remote: true) do |f| %>
+        <%= f.hidden_field :meeting_room_id, value: @meeting_room.public_uid %>
+        <%= f.text_area :content, id: "room-message-textarea" %>
+        <%= f.submit "送信", class: "message-btn" %>
+      <% end %>
+    </div>
+  </div>
+  <div id = "outside-send-message-container" class = "outside-send-message-list">
+    <h6>外部メッセージ送信</h6>
+    <div id = "general-message-user-list">
+      <% @departments.each do |department| %>
+        <div class = "group-container">
+          <div class = "group-head">
+            <%= department.name %>
+          </div>
+          <ul class = "group-list">
+            <% department.users.each do |user| %>
+              <% if user != current_user %>
+                <li class = "select-user select-user-<%= user.public_uid %>" data-select_user = "<%= user.public_uid %>"><%= user.name %></li>
+              <% end %>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+      <% @contact_groups.each do |group| %>
+        <div class = "group-container">
+          <div class = "group-head">
+            <%= group.name %>
+          </div>
+          <ul class = "group-list">
+            <% group.users.each do |user| %>
+              <li class = "select-user select-user-<%= user.public_uid %>" data-select_user = "<%= user.public_uid %>"><%= user.name %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+    </div>
+    <div id = "outside-send-message-form">
+      <%= form_with(model: @new_general_message, url: general_messages_multiple_create_path) do |f| %>
+        <div id = "chat-send-users-form-list">
+            
+        </div>
+        <%= f.text_area :content, id: "general-message-textarea" %>
+        <%= f.submit "送信", class: "message-btn" %>
+      <% end %>
+    </div>
+  </div>
+  <div 
+    id = "video-config-container" 
+    class = "video-config" 
+    <% if @meeting_room.finish_at > DateTime.now %>
+      data-room_status = "on"
+    <% else %>
+      data-room_status = "off"
+    <% end %>
+  >
+    <h6>映像・マイク変更</h6>
+    <div id = device-config-form></div>
+  </div>
+  <% if @meeting_room.finish_at > DateTime.now %>
+    <div id = "meeting-room" data-room_id = "<%= @meeting_room.public_uid %>">
+      <%= render "meeting_rooms/room_setting" %>
+    </div>
+  <% else %>
+    <div id = "meeting-room" data-room_id = "<%= @meeting_room.public_uid %>">
+      <div id = "inactive-room">
+        <i class="fas fa-door-open" id = "door"></i>
+        <i class="far fa-times-circle" id = "door-invalid"></i>
+        <span>ミーティングは終了しています。</span>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<% if @meeting_room.finish_at > DateTime.now %>
+  <script>
+    var modal = document.getElementById("Modal");
+    const Peer = window.Peer;
+    (async function room_setting(){
+      const myVideo = document.getElementById("my-video");
+      const video_select = document.getElementById("video-select");
+      const audio_select = document.getElementById("audio-select");
+      const device_select = document.getElementsByClassName("device-select");
+
+      // デバイス取得
+      let optionStream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: true
+      });
+
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      
+      //　デバイス選択追加
+      for(var i=0; i < devices.length;i++){
+        if(devices[i].kind == "videoinput"){
+          let option = document.createElement("option");
+          option.setAttribute("value", devices[i].deviceId);
+          option.innerHTML = devices[i].label;
+          video_select.appendChild(option);
+        } else if(devices[i].kind == "audioinput"){
+          let option = document.createElement("option");
+          option.setAttribute("value", devices[i].deviceId);
+          option.innerHTML = devices[i].label;
+          audio_select.appendChild(option);
+        }
+      }
+
+      const changeDevice = (e) => {
+        if(video_select.value != "" && audio_select.value != "" && video_select.value != "display"){
+          let Stream = navigator.mediaDevices.getUserMedia({
+            audio: {deviceId: audio_select.value},
+            video: {deviceId: video_select.value}
+          }).then((stream)=> {
+            myVideo.muted = true;
+            myVideo.srcObject = stream;
+            myVideo.playsInline = true;
+            myVideo.play().catch(console.error);
+          });
+        } else if(video_select.value == "display" && audio_select.value != ""){
+          let Stream = navigator.mediaDevices.getDisplayMedia({
+            audio: {deviceId: audio_select.value},
+            video: true
+          }).then((stream)=> {
+            myVideo.muted = true;
+            myVideo.srcObject = stream;
+            myVideo.playsInline = true;
+            myVideo.play().catch(console.error);
+          });
+        }
+      }       
+      
+      // ビデオデバイス切替
+      for(var i=0; i < device_select.length; i++){
+        device_select[i].addEventListener("change", changeDevice);
+      }
+
+      // Peerインスタンス作成 
+      const peer = (window.peer = new Peer({
+        key: "<%= ENV["API_KEY"] %>",
+        debug: 3
+      }));
+    })();
+  </script>
 <% end %>
