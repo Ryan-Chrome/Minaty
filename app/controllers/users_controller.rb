@@ -34,16 +34,29 @@ class UsersController < ApplicationController
     @other_user = User.find_by(public_uid: params[:id])
     if @other_user.present? && @other_user != current_user
       # 対象ユーザーのスケジュール取得
-      @other_user_schedules = @other_user.schedules.where(work_on: Date.today).order(:start_at)
+      @other_user_schedules = @other_user.schedules.where(
+        work_on: Date.today,
+      ).order(:start_at)
       if @other_user_schedules.present?
         # スケジュール表用配列作成
         if @other_user_schedules.last.finish_at[3] == "0"
-          @other_user_work_time = (hours_time_change(@other_user_schedules.first.start_at)..hours_time_change(@other_user_schedules.last.finish_at))
+          @other_user_work_time = (hours_time_change(
+            @other_user_schedules.first.start_at
+          )..hours_time_change(
+            @other_user_schedules.last.finish_at
+          ))
         else
-          @other_user_work_time = (hours_time_change(@other_user_schedules.first.start_at)..hours_time_change(@other_user_schedules.last.finish_at) + 1)
+          @other_user_work_time = (hours_time_change(
+            @other_user_schedules.first.start_at
+          )..hours_time_change(
+            @other_user_schedules.last.finish_at
+          ) + 1)
         end
         @other_user_work_length = @other_user_work_time.to_a.length
-        create_other_schedule_arrays(@other_user_schedules, @other_user_work_time)
+        create_other_schedule_arrays(
+          @other_user_schedules,
+          @other_user_work_time
+        )
       end
       # 対象ユーザーの勤怠情報取得
       @status = @other_user.attendances.find_by(
@@ -54,11 +67,23 @@ class UsersController < ApplicationController
         holiday_on: Date.today,
       )
       # メッセージ関連
-      current_messages = current_user.general_messages.includes(:general_message_relations).where(general_message_relations: { user_id: @other_user.id })
-      other_messages = @other_user.general_messages.includes(:general_message_relations).where(general_message_relations: { user_id: current_user.id })
+      current_messages = current_user.general_messages.includes(
+        :general_message_relations
+      ).where(
+        general_message_relations: { user_id: @other_user.id },
+      )
+      other_messages = @other_user.general_messages.includes(
+        :general_message_relations
+      ).where(
+        general_message_relations: { user_id: current_user.id },
+      )
       @other_user_message_ids = current_messages.ids + other_messages.ids
-      @other_user_messages = GeneralMessage.where(id: @other_user_message_ids).includes(:user).order(created_at: "DESC").page(params[:page]).per(10).reverse
-      @other_user_chat_page_count = GeneralMessage.where(id: @other_user_message_ids).page(params[:page]).per(10).total_pages.to_i
+      @other_user_messages = GeneralMessage.where(
+        id: @other_user_message_ids,
+      ).includes(:user).order(created_at: "DESC").page(params[:page]).per(10).reverse
+      @other_user_chat_page_count = GeneralMessage.where(
+        id: @other_user_message_ids,
+      ).page(params[:page]).per(10).total_pages.to_i
       @new_message = GeneralMessage.new
       # グループ追加関連
       @new_group_relation = ContactGroupRelation.new
@@ -79,7 +104,18 @@ class UsersController < ApplicationController
     if @user
       if @user == current_user || current_user.admin?
         #スケジュールグラフ用カラーパレット
-        @paret = ["#BD782F", "#00437C", "#6B3B41", "#B81649", "#A9B678", "#00437C", "#6B3B41", "#B81649", "#A9B678", "#00437C"]
+        @paret = [
+          "#BD782F",
+          "#00437C",
+          "#6B3B41",
+          "#B81649",
+          "#A9B678",
+          "#00437C",
+          "#6B3B41",
+          "#B81649",
+          "#A9B678",
+          "#00437C",
+        ]
         # 対象ユーザーのスケジュール取得
         @table_schedules = @user.schedules
         # 円グラフ用スケジュールオブジェクト生成
@@ -136,7 +172,10 @@ class UsersController < ApplicationController
           @week_work_time
         )
         # 日別スケジュール用オブジェクト生成
-        @schedules = @table_schedules.select { |v| v.work_on == Date.today }.sort { |a, b| a.start_at <=> b.start_at }
+        @schedules = @table_schedules.select {
+          |v|
+          v.work_on == Date.today
+        }.sort { |a, b| a.start_at <=> b.start_at }
         if @schedules.present?
           if @schedules.last.finish_at[3] == "0"
             @work_time = (hours_time_change(

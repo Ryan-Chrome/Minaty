@@ -102,9 +102,9 @@ RSpec.describe "Schedule", type: :system, js: true do
     find("#header-time-btn").click
     # タイマースタート
     find("#timer-start").click
+    sleep 1
     # タイマーストップ
     find("#timer-stop").click
-    sleep 1
     # タイマーのスケジュール追加ボタンクリック、スケジュール新規作成フォーム表示
     expect(page).not_to have_css "#add-schedule-next"
     find("#timer-add-schedule").click
@@ -133,9 +133,9 @@ RSpec.describe "Schedule", type: :system, js: true do
     find("#header-time-btn").click
     # タイマースタート
     find("#timer-start").click
+    sleep 1
     # タイマーストップ
     find("#timer-stop").click
-    sleep 1
     # タイマーのスケジュール追加ボタンクリック、スケジュール新規作成フォーム表示
     expect(page).not_to have_css "#add-schedule-next"
     find("#timer-add-schedule").click
