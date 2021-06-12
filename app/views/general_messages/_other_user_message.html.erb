@@ -1,0 +1,91 @@
+<% #　ホームメッセージコンテナ 受信時パーシャル %>
+<div class = "message-content other-user" id = "general-message-<%= message.id %>">
+  <span class = "message-user-name">
+    <span class = "return-message-btn" data-message_user = "<%= message.user.public_uid %>"><i class="fas fa-share"></i> 返信 </span>
+    <%= link_to message.user.name, user_modal_show_path(message.user.public_uid), remote: true %>
+  </span>
+  <p class = "message">
+    <%= safe_join(message.content.split("\n"), tag(:br)) %>
+    <% if message.room_id.present? %>
+      <br><%= link_to "スケジュール追加", schedules_meeting_new_path(meeting_room_id: message.room_id), remote: true, class: "schedule-add-meeting" %>
+      <br><%= link_to "ミーティングへ", meeting_room_path(message.room_id) %>
+    <% end %>
+  </p>
+  <span class = "message-time"><%= l message.created_at %></span>
+</div>
+
+<script>
+  var message_id = <%= message.id %>;
+  var message_content = document.getElementById(`general-message-${message_id}`);
+  var message_return_btn = message_content.getElementsByClassName("return-message-btn")[0];
+  var setReturnMessage = (e) => {
+    var user_name = e.target.nextElementSibling.textContent;
+    var user_id = e.target.dataset.message_user;
+    var chat_send_list_container = document.getElementById("send-list");
+    var chat_send_user_list = document.getElementById("chat-send-user-list");
+    var chat_send_form_list = document.getElementById("chat-send-users-form-list");
+    var chat_send_form_input = chat_send_form_list.children;
+    var check_selectors = chat_send_list_container.getElementsByClassName(`user-selector-${user_id}`);
+    for(i=0; i < check_selectors.length;i++){
+      var check_box = check_selectors[i].getElementsByTagName("input")[0];
+      var user_list = check_selectors[i].parentNode;
+      var user_list_selectors = user_list.children;
+      var group_div = user_list.previousElementSibling;
+      var group_div_checkbox = group_div.getElementsByTagName("input")[0];
+      var selector_count = 0;
+      check_box.checked = true;
+      check_selectors[i].style.color = "black";
+      check_selectors[i].style.backgroundColor = "white";
+      for(var list_number=0; list_number < user_list_selectors.length;list_number++){
+        if(user_list_selectors[list_number].getElementsByTagName("input")[0].checked){
+          selector_count = selector_count +1;
+        } 
+        if(selector_count >= user_list_selectors.length){
+          group_div_checkbox.checked = true;
+        }
+      }
+    }
+
+    for(i=0; i < chat_send_form_input.length;i++){
+      var remove_user_id = chat_send_form_input[i].value;
+      if(remove_user_id != user_id) {
+        var remove_send_selector = chat_send_list_container.getElementsByClassName(`user-selector-${remove_user_id}`);
+        for(s=0; s < remove_send_selector.length;s++){
+          var remove_checkbox = remove_send_selector[s].getElementsByTagName("input")[0];
+          remove_checkbox.checked = false;
+          remove_send_selector[s].style.color = "white";
+          remove_send_selector[s].style.backgroundColor = "";
+          var user_list = remove_send_selector[s].parentNode;
+          var user_list_selectors = user_list.children;
+          var group_div = user_list.previousElementSibling;
+          var group_div_checkbox = group_div.getElementsByTagName("input")[0];
+          var selector_count = 0;
+          for(var list_number=0; list_number < user_list_selectors.length;list_number++){
+            if(user_list_selectors[list_number].getElementsByTagName("input")[0].checked){
+              selector_count = selector_count -1;
+            }
+            if(selector_count <= 0){
+              group_div_checkbox.checked = false;
+            }
+          }
+        }
+      } 
+    }
+
+    var send_user_element = document.createElement("li");
+    var send_user_element_text = document.createTextNode(`${user_name}`);
+    send_user_element.setAttribute("id", `send-selected-user-${user_id}`);
+    send_user_element.setAttribute("class", "send-selected-users");
+    send_user_element.appendChild(send_user_element_text);
+    chat_send_user_list.innerHTML = "";
+    chat_send_user_list.appendChild(send_user_element);
+    var chat_send_form_element = document.createElement("input");
+    chat_send_form_element.setAttribute("type", "hidden");
+    chat_send_form_element.setAttribute("name", "general_message_send_users[]");
+    chat_send_form_element.setAttribute("id", `chat-send-users-form-${user_id}`);
+    chat_send_form_element.value = user_id;
+    chat_send_form_list.innerHTML = "";
+    chat_send_form_list.appendChild(chat_send_form_element);
+  }
+  message_return_btn.addEventListener("click", setReturnMessage);
+</script>

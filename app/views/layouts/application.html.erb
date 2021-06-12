@@ -16,6 +16,17 @@
   <body>
     <%= render 'shared/header' %>
     <div id = "Container">
+      <% unless @notice_message.present? %>
+        <div id = "notice-message-container">
+          <span id = "notice-close">×</span>
+          <span id = "notice-message"></span>
+        </div>
+      <% end %>
+      <% if user_signed_in? %>
+        <div id = "side-menu">
+          <%= render "shared/side_menu" %>
+        </div>
+      <% end %>
       <%= yield %>
     </div>
   </body>

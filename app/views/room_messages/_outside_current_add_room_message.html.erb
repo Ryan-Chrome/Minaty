@@ -1,5 +1,5 @@
 <div class = "message-content current">
-    <span class = message-name><i class="fas fa-sign-out-alt"></i> <%= @general_message.user.name %></span>
-    <div class = "message"><%= safe_join(@general_message.content.split("\n"), tag(:br)) %></div>
-    <span class = "message-data"><%= l @general_message.created_at %> (外部メッセージ)</span>
+  <span class = message-name><i class="fas fa-sign-out-alt"></i> <%= @general_message.user.name %></span>
+  <div class = "message"><%= safe_join(@general_message.content.split("\n"), tag(:br)) %></div>
+  <span class = "message-data"><%= l @general_message.created_at %> (外部メッセージ)</span>
 </div>

@@ -1,0 +1,15 @@
+<% if @paid_holiday.present? %>
+  <span class = "holiday">有給休暇中</span>
+<% else %>
+  <% if @sidebar_attendance.present? %>
+    <% if @sidebar_attendance.left_at.present? %>
+      <span class = "arrive">出勤時間： <%= @sidebar_attendance.arrived_at.strftime("%H時%M分") %></span>
+      <span class = "leave">退勤時間： <%= @sidebar_attendance.left_at.strftime("%H時%M分") %></span>
+    <% elsif @sidebar_attendance.arrived_at.present? %>
+      <span class = "arrive">出勤時間： <%= @sidebar_attendance.arrived_at.strftime("%H時%M分") %></span>
+      <%= link_to "退勤", attendance_path(@sidebar_attendance.id), method: :patch, remote: true, class: "leave", data: {confirm: "退勤時刻を打刻します"} %>
+    <% end %>
+  <% else %>
+    <%= link_to "出勤", attendances_path, method: :post, remote: true, class: "arrive", data: {confirm: "出勤時刻を打刻します"} %>
+  <% end %>
+<% end %>

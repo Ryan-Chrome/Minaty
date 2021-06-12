@@ -9,7 +9,7 @@ class RoomMessageBroadcastJob < ApplicationJob
 
   private
 
-    def render_room_message(room_message)
-      ApplicationController.renderer.render partial: 'room_messages/add_room_message', locals: { message: room_message }
-    end
+  def render_room_message(room_message)
+    ApplicationController.renderer.render partial: "room_messages/add_room_message", locals: { message: room_message }
+  end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_05_08_092402) do
+ActiveRecord::Schema.define(version: 2021_05_23_171724) do
 
   create_table "attendances", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "arrived_at"
@@ -41,6 +41,13 @@ ActiveRecord::Schema.define(version: 2021_05_08_092402) do
     t.index ["user_id"], name: "index_contact_groups_on_user_id"
   end
 
+  create_table "departments", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "name", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["name"], name: "index_departments_on_name", unique: true
+  end
+
   create_table "entries", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "meeting_room_id", null: false
     t.bigint "user_id", null: false
@@ -53,13 +60,11 @@ ActiveRecord::Schema.define(version: 2021_05_08_092402) do
 
   create_table "general_message_relations", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "user_id", null: false
-    t.bigint "receive_user_id", null: false
     t.bigint "general_message_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["general_message_id"], name: "index_general_message_relations_on_general_message_id"
-    t.index ["receive_user_id", "general_message_id"], name: "index_general_message_user_message", unique: true
-    t.index ["receive_user_id"], name: "index_general_message_relations_on_receive_user_id"
+    t.index ["user_id", "general_message_id"], name: "index_relations_on_user_id_and_general_message_id", unique: true
     t.index ["user_id"], name: "index_general_message_relations_on_user_id"
   end
 
@@ -123,10 +128,11 @@ ActiveRecord::Schema.define(version: 2021_05_08_092402) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.string "name"
-    t.string "department"
     t.string "public_uid"
     t.boolean "admin", default: false
     t.string "kana"
+    t.bigint "department_id"
+    t.index ["department_id"], name: "index_users_on_department_id"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["public_uid"], name: "index_users_on_public_uid", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
@@ -140,10 +146,10 @@ ActiveRecord::Schema.define(version: 2021_05_08_092402) do
   add_foreign_key "entries", "users"
   add_foreign_key "general_message_relations", "general_messages"
   add_foreign_key "general_message_relations", "users"
-  add_foreign_key "general_message_relations", "users", column: "receive_user_id"
   add_foreign_key "general_messages", "users"
   add_foreign_key "paid_holidays", "users"
   add_foreign_key "room_messages", "meeting_rooms"
   add_foreign_key "room_messages", "users"
   add_foreign_key "schedules", "users"
+  add_foreign_key "users", "departments"
 end

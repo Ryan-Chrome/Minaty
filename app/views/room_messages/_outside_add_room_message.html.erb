@@ -1,39 +1,42 @@
 <div class = "message-content other">
-    <span class = message-name><i class="fas fa-sign-out-alt"></i> <%= message.user.name %><span id = "return-btn-<%= message.id %>" class = "outside-message-return" data-select_user = "<%= message.user.public_uid %>">返信</span></span>
-    <div class = "message"><%= safe_join(message.content.split("\n"), tag(:br)) %></div>
-    <span class = "message-data"><%= l message.created_at %> (外部メッセージ)</span>
+  <span class = message-name>
+    <i class="fas fa-sign-out-alt"></i> <%= message.user.name %><span id = "return-btn-<%= message.id %>" class = "outside-message-return" data-select_user = "<%= message.user.public_uid %>">返信</span>
+  </span>
+  <div class = "message"><%= safe_join(message.content.split("\n"), tag(:br)) %></div>
+  <span class = "message-data"><%= l message.created_at %> (外部メッセージ)</span>
 </div>
 
 <script>
-    var outside_general_message_return = document.getElementById("return-btn-<%= message.id %>");
-    outside_general_message_return.onclick = (e) => {
-        var select_user_id = e.target.getAttribute("data-select_user");
-        var select_user_li = document.getElementsByClassName(`select-user-${select_user_id}`);
-        var remove_general_message_form_element = document.getElementById(`general_message_user_${select_user_id}`);
-        if(!remove_general_message_form_element){
-            var general_message_form_element = document.createElement("input");
-            general_message_form_element.setAttribute("type", "hidden");
-            general_message_form_element.setAttribute("name", "general_message_send_users[]");
-            general_message_form_element.setAttribute("value", `${select_user_id}`);
-            general_message_form_element.setAttribute("id", `general_message_user_${select_user_id}`);
-            general_message_select_form.appendChild(general_message_form_element);
-            for(var i=0; i < select_user_li.length;i++){
-                if(select_user_li[i].style.background == ""){
-                    select_user_li[i].style.background = "white";
-                    select_user_li[i].style.color = "black";
-                    select_user_li[i].style.fontWeight = "bold";
-                }
-            }
+  var general_message_select_form = document.getElementById("chat-send-users-form-list");
+  var outside_general_message_return = document.getElementById("return-btn-<%= message.id %>");
+  outside_general_message_return.onclick = (e) => {
+    var select_user_id = e.target.getAttribute("data-select_user");
+    var select_user_li = document.getElementsByClassName(`select-user-${select_user_id}`);
+    var remove_general_message_form_element = document.getElementById(`general_message_user_${select_user_id}`);
+    if(!remove_general_message_form_element){
+      var general_message_form_element = document.createElement("input");
+      general_message_form_element.setAttribute("type", "hidden");
+      general_message_form_element.setAttribute("name", "general_message_send_users[]");
+      general_message_form_element.setAttribute("value", `${select_user_id}`);
+      general_message_form_element.setAttribute("id", `general_message_user_${select_user_id}`);
+      general_message_select_form.appendChild(general_message_form_element);
+      for(var i=0; i < select_user_li.length;i++){
+        if(select_user_li[i].style.background == ""){
+          select_user_li[i].style.background = "white";
+          select_user_li[i].style.color = "black";
+          select_user_li[i].style.fontWeight = "bold";
         }
-        var room_message_side = document.getElementById("room-message-container");
-        var outside_message_side = document.getElementById("outside-send-message-container");
-        var room_message_side_btn = document.getElementById("room-message");
-        var outside_message_side_btn = document.getElementById("outside-send-message-list");
-
-        room_message_side_btn.classList.remove("active");
-        outside_message_side_btn.classList.add("active");
-        room_message_side.style.display = "none";
-        outside_message_side.style.display = "inline-block";
+      }
     }
+    var room_message_side = document.getElementById("room-message-container");
+    var outside_message_side = document.getElementById("outside-send-message-container");
+    var room_message_side_btn = document.getElementById("room-message");
+    var outside_message_side_btn = document.getElementById("outside-send-message-list");
+
+    room_message_side_btn.classList.remove("active");
+    outside_message_side_btn.classList.add("active");
+    room_message_side.style.display = "none";
+    outside_message_side.style.display = "inline-block";
+  }
 </script>
 

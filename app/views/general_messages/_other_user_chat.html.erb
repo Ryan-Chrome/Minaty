@@ -1,30 +1,30 @@
-<div id = "chat-log" data-other_page_count = "<%= @other_user_chat_page_count %>">
-    <% message_date = "foo" %>
-    <% @other_user_messages.each do |message| %>
-        <% if message_date != message.created_at.strftime("%m月%d日") %>
-            <% message_date = message.created_at.strftime("%m月%d日") %>
-            <span class = "message-date"><%= message_date %></span>
-        <% end %>
-        <% if message.user == current_user %>
-            <div class = "message-content current-user">
-                <span class = "message-user-name">
-                    <%= message.user.name %>
-                </span>
-                <p class = "message">
-                    <%= safe_join(message.content.split("\n"), tag(:br)) %>
-                </p>
-                <span class = "message-time"><%= l message.created_at %></span>
-            </div>
-        <% else %>
-            <div class = "message-content other-user">
-                <span class = "message-user-name">
-                    <%= message.user.name %>
-                </span>
-                <p class = "message">
-                    <%= safe_join(message.content.split("\n"), tag(:br)) %>
-                </p>
-                <span class = "message-time"><%= l message.created_at %></span>
-            </div>
-        <% end %>
-    <% end %>
-</div>
+<% message_date = "foo" %>
+<% @other_user_messages.each do |message| %>
+  <% if message_date != message.created_at.strftime("%m/%d") %>
+    <% message_date = message.created_at.strftime("%m/%d") %>
+    <span class = "message-date" id = "<%= message_date %>">
+      <%= "#{message_date} (#{%w(日 月 火 水 木 金 土)[message.created_at.wday]})" %>
+    </span>
+  <% end %>
+  <% if message.user == current_user %>
+    <div class = "message-content current-user">
+      <span class = "message-user-name">
+        <%= message.user.name %>
+      </span>
+      <p class = "message">
+        <%= safe_join(message.content.split("\n"), tag(:br)) %>
+      </p>
+      <span class = "message-time"><%= l message.created_at %></span>
+    </div>
+  <% else %>
+    <div class = "message-content other-user">
+      <span class = "message-user-name">
+        <%= message.user.name %>
+      </span>
+      <p class = "message">
+        <%= safe_join(message.content.split("\n"), tag(:br)) %>
+      </p>
+      <span class = "message-time"><%= l message.created_at %></span>
+    </div>
+  <% end %>
+<% end %>

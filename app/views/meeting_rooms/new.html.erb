@@ -1,117 +1,113 @@
 <% if user_signed_in? %>
-    <div id = "common-container">
-        <div id = "side-menu">
-            <%= render "homes/side_menu" %>
-        </div>
-        <div id = "new-room-container" style = "height: 100%; max-height: 1000px; width: 100%;">
-            <div id = "rooms-menu" style = "height: 50px;">
-                <%= link_to "ルーム一覧", meeting_rooms_path, id: "rooms-link", data: {"turbolinks"=>false} %>
-                <%= link_to "過去ルーム一覧", meeting_rooms_past_index_path, id: "past-rooms-link", date: {"turbolinks"=>false} %>
-                <span id = "new-room-link" style = "border-bottom: 5px solid #2196f3;">新規作成</span>
-            </div>
-            <div id = "meeting-lobby">
-                <div id = meeting-new-form>
-                    <%= form_with model: @meeting_room, local: true do |f| %>
-                        <div id = "room-form" class = "meeting-new-form-sub">
-                            <div class = "form-container">
-                                <div class = "form-field" style = "height: 15%;">
-                                    <div class = "form-inner">
-                                        <%= f.label :name, "ミーティング内容", class: "label" %>
-                                        <%= f.text_field :name, class: "form", placeholder: "15文字以内" %>
-                                    </div>
-                                </div>
-
-                                <div class = "form-field" style = "height: 25%;">
-                                    <div class = "form-inner">
-                                        <%= f.label :commnet, "コメント", class: "label" %>
-                                        <%= f.text_area :comment, class: "textarea", placeholder: "400字以内" %>
-                                    </div>
-                                </div>
-                                        
-                                <div class = "form-field" style = "height: 18%;">
-                                    <div class = "form-inner">
-                                        <%= f.label :meeting_date, "日付", class: "label" %>
-                                        <%= f.date_field :meeting_date, class: "form", value: Date.today %>
-                                    </div>
-                                </div>
-                            
-                                <div class = "meeting-time-form form-field" style = "height: 17%;">
-                                    <div class = "form-inner">
-                                        <%= f.label :start_at, "開始時間", class: "label" %>
-                                        <%= f.time_select :start_at, {minute_step: 10} %>
-                                    </div>
-                                </div>
-
-                                <div class = "meeting-time-form form-field" style = "height: 19%;">
-                                    <div class = "form-inner">
-                                        <%= f.label :finish_at, "終了時間", class: "label" %>
-                                        <%= f.time_select :finish_at, {minute_step: 10} %>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <%= f.submit "ルーム作成", class: "submit" %>
-                                </div>
-                            </div>
-                        </div>
-                        <div id = "entry-form" class = "meeting-new-form-sub">
-                            <div id = "non-select-user-list">
-                                <h6>ユーザーリスト</h6>
-                                <div id = "entry-users-select">
-                                    <% group_container_number = 0 %>
-                                    <% @departments.each do |department| %>
-                                        <div id = "entry-select-group-<%= group_container_number %>" class = "entry-select-group">
-                                            <span style = "pointer-events: none"><%= department.department %></span>
-                                            <input type="checkbox" class = "entry-group-check">
-                                        </div>
-                                        <ul id = "entry-select-list-<%= group_container_number %>" class = "entry-select-list">
-                                            <% @users.each do |user| %>
-                                                <% if user.department == department.department && user != current_user %>
-                                                    <li class = "entry-select-user-content">
-                                                        <%= user.name %>
-                                                        <input type="checkbox" class = "user_ids_<%= user.public_uid %>" value = "<%= user.public_uid %>">
-                                                    </li>
-                                                <% end %>
-                                            <% end %>
-                                        </ul>
-                                        <% group_container_number += 1 %>
-                                    <% end %>
-                                    <% @contact_groups.each do |group| %>
-                                        <div id = "entry-select-group-<%= group_container_number %>" class = "entry-select-group">
-                                            <span style = "pointer-events: none"><%= group.name %></span>
-                                            <input type="checkbox" class = "entry-group-check">
-                                        </div>
-                                        <ul id = "entry-select-list-<%= group_container_number %>" class = "entry-select-list">
-                                            <% group.contact_group_relations.each do |relation| %>
-                                                <li class = "entry-select-user-content">
-                                                    <%= relation.user.name %>
-                                                    <input type="checkbox" class = "user_ids_<%= relation.user.public_uid %>" value = "<%= relation.user.public_uid %>">
-                                                </li>
-                                            <% end %>
-                                        </ul>
-                                        <% group_container_number += 1 %>
-                                    <% end %>
-                                </div>
-                            </div>
-                            <div id = "select-user-list">
-                                <h6>入室許可ユーザー</h6>
-                                <div id = "entry-selected-user-forms">
-                                    
-                                </div>
-                                <ul id = "selected-users">
-                                    <% if @meeting_room.errors.messages[:room_entry_users].present? %>
-                                        <span class = "entries-error">
-                                            <i class="fas fa-exclamation-circle"></i>
-                                            参加するユーザーを<br>
-                                            選択してください
-                                        </span>
-                                    <% end %>
-                                </ul>
-                            </div>
-                        </div>
-                    <% end %>
+  <div id = "common-container">
+    <div id = "new-room-container" style = "height: 100%; max-height: 1000px; width: 100%;">
+      <div id = "rooms-menu" style = "height: 50px;">
+        <%= link_to "ルーム一覧", meeting_rooms_path, id: "rooms-link" %>
+        <%= link_to "過去ルーム一覧", meeting_rooms_past_index_path, id: "past-rooms-link" %>
+        <span id = "new-room-link" style = "border-bottom: 5px solid #2196f3;">新規作成</span>
+      </div>
+      <div id = "meeting-lobby">
+        <div id = meeting-new-form>
+          <%= form_with model: @meeting_room, local: true do |f| %>
+            <div id = "room-form" class = "meeting-new-form-sub">
+              <div class = "form-container">
+                <div class = "form-field" style = "height: 15%;">
+                  <div class = "form-inner" id = "name-form">
+                    <%= f.label :name, "ミーティング内容", class: "label" %>
+                    <%= f.text_field :name, class: "form", placeholder: "15文字以内" %>
+                  </div>
                 </div>
+
+                <div class = "form-field" style = "height: 25%;">
+                  <div class = "form-inner" id = "comment-form">
+                    <%= f.label :commnet, "コメント", class: "label" %>
+                    <%= f.text_area :comment, class: "textarea", placeholder: "400字以内" %>
+                  </div>
+                </div>
+                        
+                <div class = "form-field" style = "height: 18%;">
+                  <div class = "form-inner" id = "date-form">
+                    <%= f.label :meeting_date, "日付", class: "label" %>
+                    <%= f.date_field :meeting_date, class: "form", value: Date.today %>
+                  </div>
+                </div>
+            
+                <div class = "meeting-time-form form-field" style = "height: 17%;">
+                  <div class = "form-inner" id = "start_form">
+                    <%= f.label :start_at, "開始時間", class: "label" %>
+                    <%= f.time_select :start_at, {minute_step: 10} %>
+                  </div>
+                </div>
+
+                <div class = "meeting-time-form form-field" style = "height: 19%;">
+                  <div class = "form-inner" id = "finish_form">
+                    <%= f.label :finish_at, "終了時間", class: "label" %>
+                    <%= f.time_select :finish_at, {minute_step: 10} %>
+                  </div>
+                </div>
+
+                <div>
+                  <%= f.submit "ルーム作成", class: "submit" %>
+                </div>
+              </div>
             </div>
+            <div id = "entry-form" class = "meeting-new-form-sub">
+              <div id = "non-select-user-list">
+                <h6>ユーザーリスト</h6>
+                <div id = "entry-users-select">
+                  <% group_container_number = 0 %>
+                  <% @departments.each do |department| %>
+                    <div id = "entry-select-group-<%= group_container_number %>" class = "entry-select-group">
+                      <span style = "pointer-events: none"><%= department.name %></span>
+                      <input type="checkbox" class = "entry-group-check">
+                    </div>
+                    <ul id = "entry-select-list-<%= group_container_number %>" class = "entry-select-list">
+                      <% department.users.each do |user| %>
+                        <% if user != current_user %>
+                          <li class = "entry-select-user-content">
+                            <%= user.name %>
+                            <input type="checkbox" class = "user_ids_<%= user.public_uid %>" value = "<%= user.public_uid %>">
+                          </li>
+                        <% end %>
+                      <% end %>
+                    </ul>
+                    <% group_container_number += 1 %>
+                  <% end %>
+                  <% @contact_groups.each do |group| %>
+                    <div id = "entry-select-group-<%= group_container_number %>" class = "entry-select-group">
+                      <span style = "pointer-events: none"><%= group.name %></span>
+                      <input type="checkbox" class = "entry-group-check">
+                    </div>
+                    <ul id = "entry-select-list-<%= group_container_number %>" class = "entry-select-list">
+                      <% group.contact_group_relations.each do |relation| %>
+                        <li class = "entry-select-user-content">
+                          <%= relation.user.name %>
+                          <input type="checkbox" class = "user_ids_<%= relation.user.public_uid %>" value = "<%= relation.user.public_uid %>">
+                        </li>
+                      <% end %>
+                    </ul>
+                    <% group_container_number += 1 %>
+                  <% end %>
+                </div>
+              </div>
+              <div id = "select-user-list">
+                <h6>入室許可ユーザー</h6>
+                <div id = "entry-selected-user-forms">
+                    
+                </div>
+                <ul id = "selected-users">
+                  <% if @meeting_room.errors.messages[:room_entry_users].present? %>
+                    <span class = "entries-error">
+                      <i class="fas fa-exclamation-circle"></i>
+                      参加するユーザーを<br>選択してください
+                    </span>
+                  <% end %>
+                </ul>
+              </div>
+            </div>
+          <% end %>
         </div>
+      </div>
     </div>
+  </div>
 <% end %>

@@ -1,133 +1,66 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe "Attendance", type: :system, js: true do
+  let!(:dept) { create(:human_resources_dept) }
+  let!(:admin_user) { create(:admin_user, department_id: dept.id) }
+  let!(:user) { create(:user, department_id: dept.id) }
 
-    let!(:admin_user){ create(:admin_user) }
+  before { login(admin_user) }
+  
+  it "出勤打刻から退勤打刻までの動作確認" do
+    find("#sidebar-btn-trigger").click
+    # 出勤ボタンが存在し退勤ボタンがないこと確認
+    expect(find("#attendance-content")).to have_css "a.arrive"
+    expect(find("#attendance-content")).not_to have_css "a.leave"
+    # 出勤ボタンクリックからダイアログ確認
+    click_on "出勤"
+    expect(page.accept_confirm).to eq "出勤時刻を打刻します"
+    # 出勤ボタンが消えて出勤時刻が表示され退勤ボタンが表示
+    expect(find("#attendance-content")).not_to have_css "a.arrive"
+    expect(find("#attendance-content")).to have_content "出勤時間"
+    expect(find("#attendance-content")).to have_css "a.leave"
+    # 退勤ボタンクリックからダイアログ確認
+    click_on "退勤"
+    expect(page.accept_confirm).to eq "退勤時刻を打刻します"
+    # 退勤ボタンが消えて退勤時刻が表示
+    expect(find("#attendance-content")).not_to have_css "a.leave"
+    expect(find("#attendance-content")).to have_content "退勤時間"
+  end
 
-    # 打刻動作確認
-    describe "operation check" do
+  it "勤怠一覧検索動作確認" do
+    visit attendances_path
+    # 全てのユーザーが表示されてることを確認
+    expect(find("#myTable")).to have_content "#{admin_user.name}"
+    expect(find("#myTable")).to have_content "#{user.name}"
+    # 検索フォーム入力
+    fill_in "search-name", with: "#{admin_user.name}"
+    click_on "検索"
+    # 検索したユーザーのみ表示されてること確認
+    expect(find("#myTable")).to have_content "#{admin_user.name}"
+    expect(find("#myTable")).not_to have_content "#{user.name}"
+  end
 
-        # 出・退勤
-        it "Stamping" do
-            login(admin_user)
-
-            # 出勤打刻動作
-            find("#sidebar-btn-trigger").click
-            expect(find("#attendance-content")).not_to have_css ".leave"
-            click_on "出勤"
-            expect(page.accept_confirm).to eq "出勤時刻を打刻します"
-            expect(find("#attendance-content")).to have_content "出勤時間"
-            expect(find("#attendance-content")).to have_css ".leave"
-
-            # 退勤打刻動作
-            click_on "退勤"
-            expect(page.accept_confirm).to eq "退勤時刻を打刻します"
-            expect(find("#attendance-content")).to have_content "退勤時間"
-        end
-
-        # 有給申請
-        context "Paid_application" do
-            it "Success" do
-                login(admin_user)
-
-                find("#sidebar-btn-trigger").click
-                click_on "有給休暇申請"
-    
-                expect(find("#paid-holiday-form")).to have_content "有給休暇申請"
-                fill_in "paid_holiday_holiday_on", with: Date.today
-                fill_in "paid_holiday_reason", with: "私用"
-                click_button "申請"
-    
-                expect(find("#user-container")).to have_content "ダッシュボード"
-                find("#sidebar-btn-trigger").click
-    
-                expect(first("#attendance-content .holiday")).to have_content "有給休暇中"
-            end
-
-            it "Error" do
-                login(admin_user)
-
-                find("#sidebar-btn-trigger").click
-                click_on "有給休暇申請"
-
-                fill_in "paid_holiday_holiday_on", with: Date.today
-                click_button "申請"
-
-                expect(first(".field_with_errors label")).to have_content "取得理由"
-
-                fill_in "paid_holiday_holiday_on", with: ""
-                fill_in "paid_holiday_reason", with: "私用"
-                click_button "申請"
-
-                expect(first(".field_with_errors label")).to have_content "取得日"
-
-                fill_in "paid_holiday_holiday_on", with: Date.today
-                fill_in "paid_holiday_reason", with: "私用"
-                click_button "申請"
-
-                visit new_paid_holiday_path
-                fill_in "paid_holiday_holiday_on", with: Date.today
-                fill_in "paid_holiday_reason", with: "私用"
-                click_button "申請"
-
-                expect(first(".field_with_errors label")).to have_content "取得日"
-            end
-        end
-    end
-
-    # 管理者ページ　勤怠管理動作確認
-    describe "management page" do
-        # 勤怠情報　反映確認
-        it "Reflected" do
-            login(admin_user)
-            visit managements_attendance_path
-            
-            expect(find("#myTable").all(".attendance")[0][:class]).to include "before-work"
-
-            arrive_work_stamping
-            visit current_path
-
-            expect(find("#myTable").all(".attendance")[0][:class]).to include "attend-work"
-
-            leave_work_stamping
-            visit current_path
-
-            expect(find("#myTable").all(".attendance")[0][:class]).to include "after-leave"
-        end
-
-        # 有給申請反映確認
-        it "Paid holiday reflected" do
-            login(admin_user)
-            paid_holiday_application
-
-            visit managements_attendance_path
-            expect(find("#myTable").all(".attendance")[0][:class]).to include "paid-status"
-        end
-
-        # 検索動作
-        context "Search" do
-            let!(:sales_user){ create(:sales_user) }
-            it "operation" do
-                login(admin_user)
-                visit managements_attendance_path
-
-                expect(find("#myTable")).to have_content "admin_user"
-                expect(find("#myTable")).to have_content "sales_user"
-
-                fill_in "name", with: "#{admin_user.name}"
-                click_button "検索"
-
-                expect(find("#myTable")).to have_content "admin_user"
-                expect(find("#myTable")).not_to have_content "sales_user"
-
-                fill_in "name", with: ""
-                select "営業部", from: "department"
-                click_button "検索"
-
-                expect(find("#myTable")).not_to have_content "admin_user"
-                expect(find("#myTable")).to have_content "sales_user"
-            end
-        end
-    end
-
+  it "CSVファイルダウンロード動作確認" do
+    visit attendances_path
+    # フォームが表示されてないこと確認
+    expect(find("#csv-form-container")).not_to have_css "#download-form"
+    # フォーム表示から正しい入力
+    find("#download-header").click
+    fill_in "start_date", with: Date.today
+    fill_in "finish_date", with: Date.today + 2.day
+    click_on "download-btn"
+    sleep 0.1
+    # ファイルがダウンロードされたことを確認
+    expect(download_content).to include "admin_user"
+    # ファイル削除
+    clear_downloads
+    # 正しくない内容を入力
+    fill_in "start_date", with: Date.today
+    fill_in "finish_date", with: Date.today - 2.day
+    click_on "download-btn"
+    # ファイルがダウンロードされないことを確認
+    expect(download_content).to be_falsey
+    # エラーメッセージダイアログが表示されること
+    expect(page.accept_confirm).to eq "フォームに不備があります"
+  end
 end

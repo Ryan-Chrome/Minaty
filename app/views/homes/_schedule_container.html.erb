@@ -1,12 +1,12 @@
 <h3><i class="far fa-calendar-alt"></i> スケジュール</h3>
 <div class = data-form>
-    <%= form_with url: schedules_date_change_path, method: :get do |f| %>
-        <%= f.date_field :schedule_date, class: "data-text", value: Date.today %>
-        <%= f.submit "移動", class: "schedule-date-btn" %>
-    <% end %>
+  <%= form_with url: schedules_date_change_path, method: :get do |f| %>
+    <%= f.date_field :schedule_date, class: "data-text", value: Date.today %>
+    <%= f.submit "移動", class: "schedule-date-btn" %>
+  <% end %>
 </div>
 <button id = "add-schedule-btn">追加</button>
 <button id = "edit-schedule-btn">編集</button>
 <div id = "schedule-content">
-    <%= render "schedules/show" %>
+  <%= render "schedules/show" %>
 </div>

@@ -1,461 +1,918 @@
-require 'rails_helper'
+require "rails_helper"
 
-# Scheduleにおける全てのアクションはJSフォーマット以外は受け付けない
 RSpec.describe "Schedule", type: :request do
+  let!(:dept) { create(:human_resources_dept) }
+  let!(:user) { create(:user, department_id: dept.id) }
+  let(:valid_header) { { "HTTP_REFERER" => root_url } }
+  let(:invalid_header) { { "HTTP_REFERER" => meeting_rooms_url } }
 
-    let!(:user){ create(:user) }
-    let(:header){ { "HTTP_REFERER" => root_url } }
-    let(:invalid_header){ { "HTTP_REFERER" =>  meeting_rooms_url} }
+  # スケジュール追加日付送信後の新規作成フォーム表示
+  describe "GET #new" do
+    context "ログイン済" do
+      before { sign_in user }
+      
+      context "root_pathからAjax通信かつフォーマットがJS形式の場合" do
+        context "パラメータが正の場合" do
+          subject {
+            get new_schedule_path,
+                params: { add_date: Date.today },
+                headers: valid_header,
+                xhr: true
+          }
 
-    # スケジュール追加日付送信後の新規作成フォーム表示
-    describe "GET #new" do
-        # ログイン済みユーザー
-        context "user is logged in" do
-            before do
-                sign_in user
-            end
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
 
-            context "Request" do
-                # root_pathからのリクエスト(js形式)成功
-                it "Success from root_path(js)" do
-                    get new_schedule_path, params: { add_date: Date.today }, headers: header, xhr: true
-                    expect(response.status).to eq 200
-                    expect(response.body).to match("modal.insertAdjacentHTML")
-                    expect(response).not_to redirect_to root_path
-                end
-
-                # js形式以外のリクエストは例外になること
-                it "Error from root_path(html)" do
-                    expect do
-                        get new_schedule_path, params: { add_date: Date.today }, headers: header
-                    end.to raise_error(ActionController::RoutingError)
-                end
-
-                # root_path以外からのリクエスト(アプリ内)をroot_pathへリダイレクト
-                it "Redirect not from root_path" do
-                    get new_schedule_path, params: { add_date: Date.today }, headers: invalid_header, xhr: true
-                    expect(response.status).to eq 302
-                    expect(response).to redirect_to root_path
-                end
-            end
+          it "スケジュール新規作成フォーム表示" do
+            subject
+            expect(response.body).to include "add-schedule-next-main"
+          end
         end
 
-        # 未ログインユーザー
-        context "user is not logged in" do
-            context "Request" do
-                # 認証失敗すること
-                it "Authentication error" do
-                    get new_schedule_path, params: { add_date: Date.today }, headers: header, xhr: true
-                    expect(response.status).to eq 401
-                end
-            end
+        context "パラメータが不正な場合" do
+          subject {
+            get new_schedule_path,
+                params: { add_date: "" },
+                headers: valid_header,
+                xhr: true
+          }
+
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "スケジュール新規作成フォーム表示されないこと" do
+            subject
+            expect(response.body).not_to include "add-schedule-next-main"
+          end
         end
+      end
+
+      context "フォーマットがJS形式以外の場合" do
+        it "ルーティングエラー" do
+          expect do
+            get new_schedule_path(format: :html),
+                params: { add_date: Date.today },
+                headers: valid_header,
+                xhr: true
+          end.to raise_error(ActionController::RoutingError)
+        end
+      end
+
+      context "Ajax通信でない場合" do
+        it "ルーティングエラー" do
+          expect do
+            get new_schedule_path(format: :js),
+                params: { add_date: Date.today },
+                headers: valid_header
+          end.to raise_error(ActionController::RoutingError)
+        end
+      end
+
+      context "root_path以外からの場合" do
+        subject {
+          get new_schedule_path,
+              params: { add_date: Date.today },
+              headers: invalid_header,
+              xhr: true
+        }
+
+        it "リクエスト成功" do
+          subject
+          expect(response.status).to eq 302
+        end
+
+        it "root_pathへリダイレクト" do
+          subject
+          expect(response).to redirect_to root_path
+        end
+      end
     end
 
-    # ミーティング通知から新規作成フォーム表示
-    describe "GET #meeting_new" do
-        let!(:meeting_room){ create(:meeting_room) }
-        let!(:entry){ meeting_room.entries.create(user_id: user.id) }
-        # ログイン済みユーザー
-        context "user is logged in" do
-            before do
-                sign_in user
-            end
+    context "未ログイン" do
+      it "認証失敗エラーコードが返ってくること" do
+        get new_schedule_path,
+            params: { add_date: Date.today },
+            headers: valid_header,
+            xhr: true
+        expect(response.status).to eq 401
+      end
+    end
+  end
 
-            context "Request" do
-                # root_pathからのリクエスト(js形式)成功
-                it "Success from root_path(js)" do
-                    get schedules_meeting_new_path, params: { meeting_room_id: meeting_room.public_uid }, headers: header, xhr: true
-                    expect(response.status).to eq 200
-                    expect(response.body).to match("modal.insertAdjacentHTML")
-                end
+  # ミーティング通知から新規作成フォーム表示
+  describe "GET #meeting_new" do
+    let!(:meeting_room) { create(:meeting_room) }
+    let!(:entry) { meeting_room.users << user }
+    let!(:other_meeting_room) { create(:meeting_room) }
+    
+    context "ログイン済" do
+      before { sign_in user }
 
-                # js形式以外のリクエストは例外になること
-                it "Error from root_path(html)" do
-                    expect do
-                        get schedules_meeting_new_path, params: { meeting_room_id: meeting_room.public_uid }, headers: header
-                    end.to raise_error(ActionController::RoutingError)
-                end
+      context "root_pathからAjax通信かつフォーマットがJS形式の場合" do
+        context "パラメータが正の場合" do
+          subject {
+            get schedules_meeting_new_path,
+                params: { meeting_room_id: meeting_room.public_uid },
+                headers: valid_header,
+                xhr: true
+          }
 
-                # root_path以外からのリクエスト(アプリ内)をroot_pathへリダイレクト
-                it "Redirect not from root_path" do
-                    get schedules_meeting_new_path, params: { meeting_room_id: meeting_room.public_uid }, headers: invalid_header, xhr: true
-                    expect(response.status).to eq 302
-                    expect(response).to redirect_to root_path
-                end
-            end
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "スケジュール新規作成フォーム表示" do
+            subject
+            expect(response.body).to include "add-schedule-next-main"
+          end
         end
 
-        # 未ログインユーザー
-        context "user is not logged in" do
-            context "Request" do
-                # 認証失敗すること
-                it "Authentication error" do
-                    get schedules_meeting_new_path, params: { meeting_room_id: meeting_room.public_uid }, headers: header, xhr: true
-                    expect(response.status).to eq 401
-                end
-            end
+        context "パラメータが不正な場合" do
+          subject {
+            get schedules_meeting_new_path,
+                params: { meeting_room_id: other_meeting_room.public_uid },
+                headers: valid_header,
+                xhr: true
+          }
+
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "スケジュール新規作成フォーム表示されないこと" do
+            subject
+            expect(response.body).not_to include "add-schedule-next-main"
+          end
         end
+      end
+
+      context "フォーマットがJS形式以外の場合" do
+        it "ルーティングエラー" do
+          expect do
+            get schedules_meeting_new_path(format: :html),
+                params: { meeting_room_id: meeting_room.public_uid },
+                headers: valid_header,
+                xhr: true
+          end.to raise_error(ActionController::RoutingError)
+        end
+      end
+
+      context "Ajax通信でない場合" do
+        it "ルーティングエラー" do
+          expect do
+            get schedules_meeting_new_path(format: :js),
+                params: { meeting_room_id: meeting_room.public_uid },
+                headers: valid_header
+          end.to raise_error(ActionController::RoutingError)
+        end
+      end
+
+      context "root_path以外からの場合" do
+        subject {
+          get schedules_meeting_new_path,
+              params: { meeting_room_id: meeting_room.public_uid },
+              headers: invalid_header,
+              xhr: true
+        }
+
+        it "リクエスト成功" do
+          subject
+          expect(response.status).to eq 302
+        end
+
+        it "root_pathへリダイレクト" do
+          subject
+          expect(response).to redirect_to root_path
+        end
+      end
     end
 
-    # タイマーから新規作成フォーム表示
-    describe "GET #add_timer" do
-        let!(:meeting_room){ create(:meeting_room) }
-        let!(:entry){ meeting_room.entries.create(user_id: user.id) }
-        let(:time_params){ { start_time: "06:36", end_time: "12:45" } }
-        let(:invalid_time_params){ { start_time: "timer", end_time: "timer" } }
-        let(:meeting_room_header){ { "HTTP_REFERER" => meeting_room_url(meeting_room.public_uid) } }
+    context "未ログイン" do
+      it "認証失敗エラーコードが返ってくること" do
+        get schedules_meeting_new_path,
+            params: { meeting_room_id: meeting_room.public_uid },
+            headers: valid_header,
+            xhr: true
+        expect(response.status).to eq 401
+      end
+    end
+  end
 
-        # ログイン済みユーザー
-        context "user is logged in" do
-            before do
-                sign_in user
-            end
+  # タイマーから新規作成フォーム表示
+  describe "GET #add_timer" do
+    let!(:meeting_room) { create(:meeting_room) }
+    let!(:entry) { meeting_room.entries.create(user_id: user.id) }
+    let(:valid_params) { { start_time: "06:36", end_time: "12:45" } }
+    let(:invalid_params) { { start_time: "timer", end_time: "timer" } }
+    let(:meeting_room_header) { { "HTTP_REFERER" => meeting_room_url(meeting_room.public_uid) } }
 
-            context "Request" do
-                # root_pathからのリクエスト(js形式)成功
-                it "Success from root_path(js)" do
-                    get schedules_add_timer_path, params: time_params, headers: header, xhr: true
-                    expect(response.status).to eq 200
-                    expect(response.body).to match("add_schedule_next_back")
-                end
+    context "ログイン済" do
+      before { sign_in user }
+      
+      context "root_pathからAjax通信かつフォーマットがJS形式の場合" do
+        context "パラメータが正の場合" do
+          subject {
+            get schedules_add_timer_path,
+                params: valid_params,
+                headers: valid_header,
+                xhr: true
+          }
 
-                # 自分の持つミーティングルームからのリクエスト(js形式)成功
-                it "Success from my_meeting_room_path(js)" do
-                    get schedules_add_timer_path, params: time_params, headers: meeting_room_header, xhr: true
-                    expect(response.status).to eq 200
-                    expect(response.body).not_to match("add_schedule_next_back")
-                    expect(response.body).to match("modal.insertAdjacentHTML")
-                end
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
 
-                # js形式以外のリクエストは例外になること
-                it "Error from root_path(html)" do
-                    expect do
-                        get schedules_add_timer_path, params: time_params, headers: header
-                    end.to raise_error(ActionController::RoutingError)
-                end
-
-                # root_path＆自分の持つミーティングルーム以外からのリクエスト(アプリ内)をroot_pathへリダイレクト
-                it "Redirect not from root_path & my_meeting_room_path" do
-                    get schedules_add_timer_path, params: time_params, headers: invalid_header, xhr: true
-                    expect(response.status).to eq 302
-                    expect(response).to redirect_to root_path
-                end
-
-                # パラメーターが不正な値
-                it "Error invalid parameter value" do
-                    get schedules_add_timer_path, params: invalid_time_params, headers: header, xhr: true
-                    expect(response.status).to eq 200
-                    expect(response.body).to eq ""
-                end
-            end
+          it "スケジュール新規作成フォーム表示" do
+            subject
+            expect(response.body).to include "add-schedule-next-main"
+          end
         end
 
-        # 未ログインユーザー
-        context "user is not logged in" do
-            context "Request" do
-                # 認証失敗すること
-                it "Authentication error" do
-                    get schedules_add_timer_path, params: time_params, headers: header, xhr: true
-                    expect(response.status).to eq 401
-                end
-            end
+        context "パラメータが不正な場合" do
+          subject {
+            get schedules_add_timer_path,
+                params: invalid_params,
+                headers: valid_header,
+                xhr: true
+          }
+
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "スケジュール新規作成フォーム表示されないこと" do
+            subject
+            expect(response.body).not_to include "add-schedule-next-main"
+          end
         end
+      end
+
+      context "エントリーしているルームからAjax通信かつフォーマットがJS形式の場合" do
+        context "パラメータが正の場合" do
+          subject {
+            get schedules_add_timer_path,
+                params: valid_params,
+                headers: meeting_room_header,
+                xhr: true
+          }
+
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "スケジュール新規作成フォーム表示" do
+            subject
+            expect(response.body).to include "add-schedule-next-main"
+          end
+        end
+
+        context "パラメータが不正な場合" do
+          subject {
+            get schedules_add_timer_path,
+                params: invalid_params,
+                headers: meeting_room_header,
+                xhr: true
+          }
+
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "スケジュール新規作成フォーム表示されないこと" do
+            subject
+            expect(response.body).not_to include "add-schedule-next-main"
+          end
+        end
+      end
+
+      context "フォーマットがJS形式以外の場合" do
+        it "ルーティングエラー" do
+          expect do
+            get schedules_add_timer_path(format: :html),
+                params: valid_params,
+                headers: meeting_room_header,
+                xhr: true
+          end.to raise_error(ActionController::RoutingError)
+        end
+      end
+
+      context "Ajax通信でない場合" do
+        it "ルーティングエラー" do
+          expect do
+            get schedules_add_timer_path(format: :js),
+                params: valid_params,
+                headers: meeting_room_header
+          end.to raise_error(ActionController::RoutingError)
+        end
+      end
+
+      context "root_path、エントリーしているルーム以外からの場合" do
+        subject {
+          get schedules_add_timer_path,
+              params: valid_params,
+              headers: invalid_header,
+              xhr: true
+        }
+
+        it "リクエスト成功" do
+          subject
+          expect(response.status).to eq 302
+        end
+
+        it "root_pathへリダイレクト" do
+          subject
+          expect(response).to redirect_to root_path
+        end
+      end
     end
 
-    # 編集するスケジュール選択後の編集フォーム表示
-    describe "GET #edit" do
-        let!(:schedule){ create(:schedule, user_id: user.id) }
-        # ログイン済みユーザー
-        context "user is logged in" do
-            before do
-                sign_in user
-            end
+    context "未ログイン" do
+      it "認証失敗エラーコードが返ってくること" do
+        get schedules_add_timer_path,
+            params: valid_params,
+            headers: meeting_room_header,
+            xhr: true
+        expect(response.status).to eq 401
+      end
+    end
+  end
 
-            context "Request" do
-                # root_pathからのリクエスト(js形式)成功
-                it "Success from root_path(js)" do
-                    get edit_schedule_path(schedule.id), headers: header, xhr: true
-                    expect(response.status).to eq 200
-                    expect(response.body).to match("modal.insertAdjacentHTML")
-                    expect(response).not_to redirect_to root_path
-                end
+  # スケジュール新規作成
+  describe "POST #create" do
+    let!(:meeting_room) { create(:meeting_room) }
+    let!(:entry) { meeting_room.entries.create(user_id: user.id) }
+    let(:valid_params) { 
+      { "schedule" => { 
+        "work_on" => "#{Date.today}",
+        "name" => "会議",
+        "start_at(4i)" => "03",
+        "start_at(5i)" => "00",
+        "finish_at(4i)" => "07",
+        "finish_at(5i)" => "00" 
+      } } 
+    }
+    let(:invalid_params) {
+      { "schedule" => {
+        "work_on" => "#{Date.today - 1}",
+        "name" => "会議",
+        "start_at(4i)" => "03",
+        "start_at(5i)" => "00",
+        "finish_at(4i)" => "07",
+        "finish_at(5i)" => "00" 
+      } } 
+    }
+    let(:meeting_room_header) { { "HTTP_REFERER" => meeting_room_url(meeting_room.public_uid) } }
+    
+    context "ログイン済" do
+      before { sign_in user }
 
-                # js形式以外のリクエストは例外になること
-                it "Error from root_path(html)" do
-                    expect do
-                        get edit_schedule_path(schedule.id), headers: header
-                    end.to raise_error(ActionController::RoutingError)
-                end
+      context "root_pathからAjax通信かつフォーマットがJS形式の場合" do
+        context "パラメータが正の場合" do
+          subject {
+            post schedules_path,
+                 params: valid_params,
+                 headers: valid_header,
+                 xhr: true
+          }
 
-                # root_path以外からのリクエスト(アプリ内)をroot_pathへリダイレクト
-                it "Redirect not from root_path" do
-                    get edit_schedule_path(schedule.id), headers: invalid_header, xhr: true
-                    expect(response.status).to eq 302
-                    expect(response).to redirect_to root_path
-                end
-            end
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "スケジュール作成成功" do
+            expect do
+              subject
+            end.to change { Schedule.count }.by(1)
+          end
+
+          it "作成成功メッセージ表示" do
+            subject
+            expect(response.body).to include "スケジュールを追加しました。"
+          end
         end
 
-        # 未ログインユーザー
-        context "user is not logged in" do
-            # 認証失敗
-            it "Authentication error" do
-                get edit_schedule_path(schedule.id), headers: header, xhr: true
-                expect(response.status).to eq 401
-            end
+        context "パラメータが不正な場合" do
+          subject {
+            post schedules_path,
+                 params: invalid_params,
+                 headers: valid_header,
+                 xhr: true
+          }
+
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "スケジュール作成失敗" do
+            expect do
+              subject
+            end.to change { Schedule.count }.by(0)
+          end
+
+          it "作成失敗メッセージ表示" do
+            subject
+            expect(response.body).to include "処理に失敗しました。"
+          end
         end
+      end
+
+      context "エントリーしているルームからAjax通信かつフォーマットがJS形式の場合" do
+        context "パラメータが正の場合" do
+          subject {
+            post schedules_path,
+                 params: valid_params,
+                 headers: meeting_room_header,
+                 xhr: true
+          }
+
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "スケジュール作成成功" do
+            expect do
+              subject
+            end.to change { Schedule.count }.by(1)
+          end
+
+          it "作成成功メッセージ表示" do
+            subject
+            expect(response.body).to include "スケジュールを追加しました。"
+          end
+        end
+
+        context "パラメータが不正な場合" do
+          subject {
+            post schedules_path,
+                 params: invalid_params,
+                 headers: meeting_room_header,
+                 xhr: true
+          }
+
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "スケジュール作成失敗" do
+            expect do
+              subject
+            end.to change { Schedule.count }.by(0)
+          end
+
+          it "作成失敗メッセージ表示" do
+            subject
+            expect(response.body).to include "処理に失敗しました。"
+          end
+        end
+      end
+
+      context "フォーマットがJS形式以外の場合" do
+        it "ルーティングエラー" do
+          expect do
+            post schedules_path(format: :html),
+                 params: valid_params,
+                 headers: valid_header,
+                 xhr: true
+          end.to raise_error(ActionController::RoutingError)
+        end
+      end
+
+      context "Ajax通信でない場合" do
+        it "ルーティングエラー" do
+          expect do
+            post schedules_path(format: :js),
+                 params: valid_params,
+                 headers: valid_header
+          end.to raise_error(ActionController::RoutingError)
+        end
+      end
+
+      context "root_path、エントリーしているルーム以外からの場合" do
+        subject {
+          post schedules_path,
+               params: valid_params,
+               headers: invalid_header,
+               xhr: true
+        }
+
+        it "リクエスト成功" do
+          subject
+          expect(response.status).to eq 200
+        end
+
+        it "スケジュール作成失敗" do
+          expect do
+            subject
+          end.to change { Schedule.count }.by(0)
+        end
+
+        it "root_pathへリダイレクト" do
+          subject
+          expect(response).to redirect_to root_path
+        end
+      end
     end
 
-    # スケジュール新規作成
-    describe "POST #create" do
-        let!(:meeting_room){ create(:meeting_room) }
-        let!(:entry){ meeting_room.entries.create(user_id: user.id) }
-        let(:schedule_params){ { "schedule"=>{"work_on"=>"#{Date.today}", "name"=>"会議", "start_at(4i)"=>"03", "start_at(5i)"=>"00", "finish_at(4i)"=>"07", "finish_at(5i)"=>"00"} } }
-        let(:invalid_schedule_params){ { "schedule"=>{"work_on"=>"#{Date.today - 1}", "name"=>"会議", "start_at(4i)"=>"03", "start_at(5i)"=>"00", "finish_at(4i)"=>"07", "finish_at(5i)"=>"00"} } }
-        let(:meeting_room_header){ { "HTTP_REFERER" => meeting_room_url(meeting_room.public_uid) } }
-        # ログイン済みユーザー
-        context "user is logged in" do
-            before do
-                sign_in user
-            end
+    context "未ログイン" do
+      it "認証失敗エラーコードが返ってくること" do
+        post schedules_path,
+          params: valid_params,
+          headers: valid_header,
+          xhr: true
+        expect(response.status).to eq 401
+      end
+    end
+  end
 
-            context "Request" do
-                # root_pathからのリクエスト(js形式)成功
-                it "Success from root_path(js)" do
-                    post schedules_path, params: schedule_params, headers: header, xhr: true
-                    expect(response.status).to eq 200
-                    expect(response).not_to redirect_to root_path
-                end
+  # 編集するスケジュール選択後の編集フォーム表示
+  describe "GET #edit" do
+    let!(:schedule) { create(:schedule, user_id: user.id) }
+    let!(:other_user) { create(:other_user, department_id: dept.id) }
+    let!(:other_schedule) { create(:schedule, user_id: other_user.id) }
 
-                # 自分の持つミーティングルームからのリクエスト(js形式)成功
-                it "Success from my_meeting_room_path(js)" do
-                    post schedules_path, params: schedule_params, headers: meeting_room_header, xhr: true
-                    expect(response.status).to eq 200
-                    expect(response).not_to redirect_to root_path
-                end
+    context "ログイン済" do
+      before { sign_in user }
 
-                # js形式以外のリクエストは例外になること
-                it "Error from root_path(html)" do
-                    expect do
-                        post schedules_path, params: schedule_params, headers: header
-                    end.to raise_error(ActionController::RoutingError)
-                end
+      context "root_pahtからAjax通信かつフォーマットがJS形式の場合" do
+        context "パラメータが正の場合" do
+          subject {
+            get edit_schedule_path(schedule.id),
+                headers: valid_header,
+                xhr: true
+          }
 
-                # root_path＆自分の持つミーティングルーム以外からのリクエスト(アプリ内)をroot_pathへリダイレクト
-                it "Redirect not from root_path & my_meeting_room_path" do
-                    post schedules_path, params: schedule_params, headers: invalid_header, xhr: true
-                    expect(response.status).to eq 200
-                    expect(response).to redirect_to root_path
-                end
-            end
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
 
-            context "Create" do
-                # 有効なパラメータかつ有効なアプリ内ページ(root_path: 成功)
-                it "Success valid params and valid header" do
-                    expect do
-                        post schedules_path, params: schedule_params, headers: header, xhr: true
-                    end.to change{ Schedule.count }.by(1)
-                end
-
-                # 有効なパラメータかつ有効なアプリ内ページ(my_meeting_path: 成功)
-                it "Success valid params and valid meeting_room_header" do
-                    expect do
-                        post schedules_path, params: schedule_params, headers: meeting_room_header, xhr: true
-                    end.to change{ Schedule.count }.by(1)
-                end
-
-                # 無効なアプリ内ページ(失敗)
-                it "Error invalud header" do
-                    expect do
-                        post schedules_path, params: schedule_params, headers: invalid_header, xhr: true
-                    end.to change{ Schedule.count }.by(0)
-                end
-
-                # 無効なパラメータ(失敗)
-                it "Error invalud params" do
-                    expect do
-                        post schedules_path, params: invalid_schedule_params, headers: header, xhr: true
-                    end.to change{ Schedule.count }.by(0)
-                end
-            end
-
-            context "Message" do
-                # 成功メッセージが表示されること
-                it "Success message" do
-                    post schedules_path, params: schedule_params, headers: header, xhr: true
-                    expect(response.body).to match("スケジュールを追加しました。")
-                end
-
-                # エラーメッセージが表示されること
-                it "Error message" do
-                    post schedules_path, params: invalid_schedule_params, headers: header, xhr: true
-                    expect(response.body).to match("処理に失敗しました。")
-                end
-            end
+          it "スケジュール編集フォーム表示" do
+            subject
+            expect(response.body).to include "edit-schedule-next-main"
+          end
         end
 
-        # 未ログインユーザー
-        context "user is not logged in" do
-            context "Request" do
-                # 認証失敗
-                it "Error root_path" do
-                    post schedules_path, params: schedule_params, headers: header, xhr: true
-                    expect(response.status).to eq 401
-                end
-            end
+        context "パラメータが不正な場合" do
+          subject {
+            get edit_schedule_path(other_schedule.id),
+                headers: valid_header,
+                xhr: true
+          }
+
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "スケジュール編集フォーム表示されないこと" do
+            subject
+            expect(response.body).not_to include "edit-schedule-next-main"
+          end
         end
+      end
+
+      context "フォーマットがJS形式以外の場合" do
+        it "ルーティングエラー" do
+          expect do
+            get edit_schedule_path(schedule.id, format: :html),
+                headers: valid_header,
+                xhr: true
+          end.to raise_error(ActionController::RoutingError)
+        end
+      end
+
+      context "Ajax通信でない場合" do
+        it "ルーティングエラー" do
+          expect do
+            get edit_schedule_path(schedule.id, format: :js),
+                headers: valid_header
+          end.to raise_error(ActionController::RoutingError)
+        end
+      end
+
+      context "root_path以外からの場合" do
+        subject {
+          get edit_schedule_path(schedule.id),
+              headers: invalid_header,
+              xhr: true
+        }
+
+        it "リクエスト成功" do
+          subject
+          expect(response.status).to eq 302
+        end
+
+        it "root_pathへリダイレクト" do
+          subject
+          expect(response).to redirect_to root_path
+        end
+      end
     end
 
-    # スケジュール編集
-    describe "PATCH #update" do
-        let!(:schedule){ create(:schedule, user_id: user.id) }
-        let!(:other_user){ create(:other_user) }
-        let!(:other_user_schedule){ create(:schedule, user_id: other_user.id) }
-        let(:schedule_params){ { "schedule"=>{"name"=>"会議", "edit_start_at(4i)"=>"03", "edit_start_at(5i)"=>"00", "edit_finish_at(4i)"=>"07", "edit_finish_at(5i)"=>"00"} } }
-        let(:invalid_schedule_params){ { "schedule"=>{"name"=>"会議", "edit_start_at(4i)"=>"12", "edit_start_at(5i)"=>"00", "edit_finish_at(4i)"=>"07", "edit_finish_at(5i)"=>"00"} } }
-        # ログイン済みユーザー
-        context "user is logged in" do
-            before do
-                sign_in user
-            end
+    context "未ログイン" do
+      it "認証失敗エラーコードが返ってくること" do
+        get edit_schedule_path(schedule.id),
+            headers: valid_header,
+            xhr: true
+        expect(response.status).to eq 401
+      end
+    end
+  end
 
-            context "Request" do
-                # root_pathからのリクエスト(js形式)成功
-                it "Success from root_path" do
-                    patch schedule_path(schedule.id), params: schedule_params, headers: header, xhr: true
-                    expect(response.status).to eq 200
-                    expect(response).not_to redirect_to root_path
-                end
+  # スケジュール編集
+  describe "PATCH #update" do
+    let!(:schedule) { create(:schedule, user_id: user.id) }
+    let!(:other_user) { create(:other_user, department_id: dept.id) }
+    let!(:other_user_schedule) { create(:schedule, user_id: other_user.id) }
+    let(:valid_params) {
+      { "schedule" => {
+        "name" => "会議",
+        "edit_start_at(4i)" => "03",
+        "edit_start_at(5i)" => "00",
+        "edit_finish_at(4i)" => "07",
+        "edit_finish_at(5i)" => "00" 
+      } } 
+    }
+    let(:invalid_params) {
+      { "schedule" => {
+        "name" => "会議",
+        "edit_start_at(4i)" => "12",
+        "edit_start_at(5i)" => "00",
+        "edit_finish_at(4i)" => "07",
+        "edit_finish_at(5i)" => "00" 
+      } } 
+    }
+    
+    context "ログイン済" do
+      before { sign_in user }
 
-                # js形式以外のリクエストは例外になること
-                it "Error from root_path(html)" do
-                    expect do
-                        patch schedule_path(schedule.id), params: schedule_params, headers: header
-                    end.to raise_error(ActionController::RoutingError)
-                end
+      context "root_pathからAjax通信かつフォーマットがJS形式の場合" do
+        context "パラメータが正の場合" do
+          subject {
+            patch schedule_path(schedule.id),
+                  params: valid_params,
+                  headers: valid_header,
+                  xhr: true
+          }
 
-                # root_path以外からのリクエスト(アプリ内)をroot_pathへリダイレクト
-                it "Redirect not from root_path" do
-                    patch schedule_path(schedule.id), params: schedule_params, headers: invalid_header, xhr: true
-                    expect(response.status).to eq 200
-                    expect(response).to redirect_to root_path
-                end
-            end
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
 
-            context "Update" do
-                # 有効なパラメータかつ有効なアプリ内ページ(root_path: 成功)
-                it "Success valid params and valid header" do
-                    patch schedule_path(schedule.id), params: schedule_params, headers: header, xhr: true
-                    expect(schedule.reload.name).to eq "会議"
-                end
+          it "スケジュール編集成功" do
+            expect do
+              subject
+            end.to change { 
+              Schedule.find(schedule.id).name 
+            }.from("#{schedule.name}").to("会議")
+          end
 
-                # 無効なパラメータ(失敗)
-                it "Error invalid params" do
-                    patch schedule_path(schedule.id), params: invalid_schedule_params, headers: header, xhr: true
-                    expect(schedule.reload.name).not_to eq "会議"
-                end
-
-                # 自分のスケジュールではない場合(失敗)
-                it "Error other_user_schedule" do
-                    patch schedule_path(other_user_schedule.id), params: schedule_params, headers: header, xhr: true
-                    expect(schedule.reload.name).not_to eq "会議"
-                end
-
-                # 無効なアプリ内ページ(失敗)
-                it "Error invalid header" do
-                    patch schedule_path(schedule.id), params: schedule_params, headers: invalid_header, xhr: true
-                    expect(schedule.reload.name).not_to eq "会議"
-                end
-            end
-
-            context "Message" do
-                # 成功メッセージ表示されること
-                it "Success message" do
-                    patch schedule_path(schedule.id), params: schedule_params, headers: header, xhr: true
-                    expect(response.body).to match("スケジュールを編集しました。")
-                end
-
-                # エラーメッセージが表示されること
-                it "Error message" do
-                    patch schedule_path(schedule.id), params: invalid_schedule_params, headers: header, xhr: true
-                    expect(response.body).to match("編集に失敗しました。")
-                end
-            end
+          it "編集成功メッセージ表示" do
+            subject
+            expect(response.body).to include "スケジュールを編集しました。"
+          end
         end
+
+        context "パラメータが不正な場合" do
+          subject {
+            patch schedule_path(schedule.id),
+                  params: invalid_params,
+                  headers: valid_header,
+                  xhr: true
+          }
+
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "スケジュール編集失敗" do
+            expect do
+              subject
+            end.not_to change {
+              Schedule.find(schedule.id).name
+            }
+          end
+
+          it "編集失敗メッセージ表示" do
+            subject
+            expect(response.body).to include "編集に失敗しました。"
+          end
+        end
+
+        context "他人のスケジュールの場合" do
+          subject {
+            patch schedule_path(other_user_schedule.id),
+                  params: valid_params,
+                  headers: valid_header,
+                  xhr: true
+          }
+
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "スケジュール編集失敗" do
+            expect do
+              subject
+            end.not_to change {
+              Schedule.find(other_user_schedule.id).name
+            }
+          end
+
+          it "編集失敗メッセージ表示" do
+            subject
+            expect(response.body).to include "編集に失敗しました。"
+          end
+        end
+      end
+
+      context "フォーマットがJS形式以外の場合" do
+        it "ルーティングエラー" do
+          expect do
+            patch schedule_path(schedule.id, format: :html),
+                  params: valid_params,
+                  headers: valid_header,
+                  xhr: true
+          end.to raise_error(ActionController::RoutingError)
+        end
+      end
+
+      context "Ajax通信でない場合" do
+        it "ルーティングエラー" do
+          expect do
+            patch schedule_path(schedule.id, format: :js),
+                  params: valid_params,
+                  headers: valid_header
+          end.to raise_error(ActionController::RoutingError)
+        end
+      end
+
+      context "root_path以外からの場合" do
+        subject {
+          patch schedule_path(schedule.id),
+                params: valid_params,
+                headers: invalid_header,
+                xhr: true
+        }
+
+        it "リクエスト成功" do
+          subject
+          expect(response.status).to eq 200
+        end
+
+        it "スケジュール編集失敗" do
+          expect do
+            subject
+          end.not_to change {
+            Schedule.find(schedule.id).name
+          }
+        end
+
+        it "root_pathへリダイレクト" do
+          subject
+          expect(response).to redirect_to root_path
+        end
+      end
     end
 
-    # スケジュール削除
-    describe "DELETE #destroy" do
-        let!(:schedule){ create(:schedule, user_id: user.id) }
-        let!(:other_user){ create(:other_user) }
-        let!(:other_user_schedule){ create(:schedule, user_id: other_user.id) }
-        # ログイン済みユーザー
-        context "user is logged in" do
-            before do
-                sign_in user
-            end
+    context "未ログイン" do
+      it "認証失敗エラーコードが返ってくること" do
+        patch schedule_path(schedule.id),
+              params: valid_params,
+              headers: valid_header,
+              xhr: true
+        expect(response.status).to eq 401
+      end
+    end
+  end
 
-            context "Request" do
-                # root_pathからのリクエスト(js形式)成功
-                it "Success from root_path(js)" do
-                    delete schedule_path(schedule.id), headers: header, xhr: true
-                    expect(response.status).to eq 200
-                    expect(response).not_to redirect_to root_path
-                end
+  # スケジュール削除
+  describe "DELETE #destroy" do
+    let!(:schedule) { create(:schedule, user_id: user.id) }
+    let!(:other_user) { create(:other_user, department_id: dept.id) }
+    let!(:other_user_schedule) { create(:schedule, user_id: other_user.id) }
+    
+    context "ログイン済" do
+      before { sign_in user }
 
-                # js形式以外のリクエストは例外になること
-                it "Error from root_path(html)" do
-                    expect do
-                        delete schedule_path(schedule.id), headers: header
-                    end.to raise_error(ActionController::RoutingError)
-                end
+      context "root_pathからAjax通信かつフォーマットがJS形式の場合" do
+        context "自分のスケジュールの場合" do
+          subject {
+            delete schedule_path(schedule.id),
+                   headers: valid_header,
+                   xhr: true
+          }
 
-                # root_path以外からのリクエスト(アプリ内)をroot_pathへリダイレクト
-                it "Redirect not from root_path" do
-                    delete schedule_path(schedule.id), headers: invalid_header, xhr: true
-                    expect(response.status).to eq 200
-                    expect(response).to redirect_to root_path
-                end
-            end
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
 
-            context "Destroy" do
-                # 存在する自分のスケジュールかつ有効なアプリ内ページ(root_path: 成功)
-                it "Success valid schedule and valid header" do
-                    expect do
-                        delete schedule_path(schedule.id), headers: header, xhr: true
-                    end.to change{ Schedule.count }.by(-1)
-                end
+          it "スケジュール削除成功" do
+            expect do
+              subject
+            end.to change { Schedule.count }.by(-1)
+          end
 
-                # 無効なアプリ内ページ(失敗)
-                it "Error invalid header" do
-                    expect do
-                        delete schedule_path(schedule.id), headers: invalid_header, xhr: true
-                    end.to change{ Schedule.count }.by(0)
-                end
-
-                # 自分のスケジュールではない場合(失敗)
-                it "Error other_user_schedule" do
-                    expect do
-                        delete schedule_path(other_user_schedule.id), headers: header, xhr: true
-                    end.to change{ Schedule.count }.by(0)
-                end
-            end
-
-            context "Message" do
-                # 成功メッセージが表示されること
-                it "Success message" do
-                    delete schedule_path(schedule.id), headers: header, xhr: true
-                    expect(response.body).to match("スケジュールを削除しました。")
-                end
-
-                # エラーメッセージが表示されること
-                it "Error message" do
-                    delete schedule_path(other_user_schedule.id), headers: header, xhr: true
-                    expect(response.body).to match("削除に失敗しました。")
-                end
-            end
+          it "削除完了メッセージ表示" do
+            subject
+            expect(response.body).to include "スケジュールを削除しました。"
+          end
         end
+
+        context "他人のスケジュールの場合" do
+          subject {
+            delete schedule_path(other_user_schedule.id),
+                   headers: valid_header,
+                   xhr: true
+          }
+
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "スケジュール削除失敗" do
+            expect do
+              subject
+            end.to change { Schedule.count }.by(0)
+          end
+
+          it "削除失敗メッセージ表示" do
+            subject
+            expect(response.body).to include "削除に失敗しました。"
+          end
+        end
+      end
+
+      context "フォーマットがJS形式以外の場合" do
+        it "ルーティングエラー" do
+          expect do
+            delete schedule_path(schedule.id, format: :html),
+                   headers: valid_header,
+                   xhr: true
+          end.to raise_error(ActionController::RoutingError)
+        end
+      end
+
+      context "Ajax通信でない場合" do
+        it "ルーティングエラー" do
+          expect do
+            delete schedule_path(schedule.id, format: :js), 
+                   headers: valid_header
+          end.to raise_error(ActionController::RoutingError)
+        end
+      end
+
+      context "root_path以外からの場合" do
+        subject {
+          delete schedule_path(schedule.id),
+                 headers: invalid_header,
+                 xhr: true
+        }
+
+        it "リクエスト成功" do
+          subject
+          expect(response.status).to eq 200
+        end
+
+        it "スケジュール削除失敗" do
+          expect do
+            subject
+          end.to change { Schedule.count }.by(0)
+        end
+
+        it "root_pathへリダイレクト" do
+          subject
+          expect(response).to redirect_to root_path
+        end
+      end
     end
 
+    context "未ログイン" do
+      it "認証失敗エラーコードが返ってくること" do
+        delete schedule_path(schedule.id),
+               headers: valid_header,
+               xhr: true
+        expect(response.status).to eq 401
+      end
+    end
+  end
 end

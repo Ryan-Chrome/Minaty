@@ -1,0 +1,17 @@
+<div id = "common-container">
+  <div id = "management-top">
+    <div id = "department-config-container">
+      <h1><i class="fas fa-cog"></i> 部署設定</h1>
+      <div id = "department-config-form">
+        <span id = "list-head">部署編集</span>
+          
+        <div id = "department-form">
+          <%= form_with model: @department, local: true do |f| %>
+            <%= f.text_field :name, class: "form" %>
+            <%= f.submit "変更", class: "btn" %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

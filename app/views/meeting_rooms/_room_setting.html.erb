@@ -1,16 +1,16 @@
 <div id = "room-menu">
-    <div id = setting-my-video-content>
-        <video id = "my-video"></video>
-        <span id = "preview-span">プレビュー</span>
-    </div>
-    <div id = "menu-container">
-        <select id="video-select" class = "device-select">
-            <option value="">映像を選択してください</option>
-            <option value="display">画面をキャプチャする</option>
-        </select>
-        <select id="audio-select" class = "device-select">
-            <option value="">マイクを選択してください</option>
-        </select>
-        <%= link_to "参加",  meeting_rooms_join_path(@meeting_room.public_uid), id: "room-join-btn", class: "menu-btn", remote: true %>
-    </div>
+  <div id = setting-my-video-content>
+    <video id = "my-video"></video>
+    <span id = "preview-span">プレビュー</span>
+  </div>
+  <div id = "menu-container">
+    <select id="video-select" class = "device-select">
+      <option value="">映像を選択してください</option>
+      <option value="display">画面をキャプチャする</option>
+    </select>
+    <select id="audio-select" class = "device-select">
+      <option value="">マイクを選択してください</option>
+    </select>
+    <%= link_to "参加",  meeting_rooms_join_path(@meeting_room.public_uid), id: "room-join-btn", class: "menu-btn", remote: true %>
+  </div>
 </div>

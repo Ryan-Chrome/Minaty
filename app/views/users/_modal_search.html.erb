@@ -1,0 +1,26 @@
+<div id = "user-search-response">
+  <div id = "user-search-response-top-bar" class = "modal-top-bar">
+    <ul>
+      <li id = "user-search-response-back-btn" class = "topbar-back-btn"><span>⬅︎</span></li>
+      <li id = "user-search-response-header" class = "topbar-header">ユーザー検索結果</li>
+      <li id = "user-search-response-close" class = "topbar-close-btn"><span>＋</span></li>
+    </ul>
+  </div>
+  <ul id = "search-user-list">
+    <% if @search_users.present? %>
+      <% @search_users.each do |user| %>
+        <% unless current_user == user %>
+          <%= link_to user_modal_show_path(user.public_uid), remote: true do %>
+            <li><%= user.name %></li>
+          <% end %>
+        <% end %>
+      <% end %>
+    <% else %>
+      <div id = "not-user-list">
+        <i class="fas fa-search"></i>
+        <span>該当するユーザーが<br>存在しません</span>
+      </div>
+    <% end %>
+  </ul>
+</div>
+

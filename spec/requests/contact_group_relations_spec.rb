@@ -1,151 +1,210 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe "ContactGroupRelation", type: :request do
+  let!(:dept) { create(:human_resources_dept) }
+  let!(:user) { create(:user, department_id: dept.id) }
+  let!(:other_user) { create(:other_user, department_id: dept.id) }
+  let!(:therd_user) { create(:therd_user, department_id: dept.id) }
+  let!(:contact_group) { create(:contact_group, user_id: user.id) }
+  let!(:other_contact_group) { create(:contact_group, user_id: other_user.id) }
+  let!(:contact_group_relation) { contact_group.users << therd_user }
 
-    let!(:user){ create(:user) }
-    let!(:other_user){ create(:other_user) }
-    let!(:therd_user){ create(:therd_user) }
-    let!(:contact_group){ user.contact_groups.create(name: "テストグループ") }
-    let!(:other_contact_group){ other_user.contact_groups.create(name: "テストグループ") }
-    let(:header){ { "HTTP_REFERER" => root_url } }
-    let(:invalid_header){ { "HTTP_REFERER" =>  meeting_rooms_url} }
+  let(:valid_header) { { "HTTP_REFERER" => root_url } }
+  let(:invalid_header) { { "HTTP_REFERER" => meeting_rooms_url } }
 
-    # コンタクトグループリレーション新規作成フォーム表示
-    describe "GET #new" do
-        # ログイン済みユーザー
-        context "user is logged in" do
-            before do
-                sign_in user
-            end
+  # コンタクトグループリレーション新規作成
+  describe "POST #create" do
+    # 有効なパラメータ
+    let(:valid_params) {
+      { contact_group_relation: {
+        contact_group_id: contact_group.id,
+        user_id: other_user.public_uid,
+      } }
+    }
+    # 他人のグループIDが含まれるパラメータ
+    let(:params_with_other_group_id) {
+      { contact_group_relation: {
+        contact_group_id: other_contact_group.id,
+        user_id: other_user.public_uid,
+      } }
+    }
+    # 自分のユーザーIDが含まれるパラメータ
+    let(:params_with_current_user_id) {
+      { contact_group_relation: {
+        contact_group_id: contact_group.id,
+        user_id: user.public_uid,
+      } }
+    }
+    # 既に登録されているリレーションのパラメータ
+    let(:registered_params) {
+      { contact_group_relation: {
+        contact_group_id: contact_group.id,
+        user_id: therd_user.public_uid,
+      } }
+    }
 
-            context "Request" do
-                # root_pathからのリクエスト(js形式)成功
-                it "Success from root_path(js)" do
-                    get new_contact_group_relation_path, params: { add_user: other_user.public_uid }, headers: header, xhr: true
-                    expect(response.status).to eq 200
-                    expect(response.body).to match("modal.insertAdjacentHTML")
-                    expect(response).not_to redirect_to root_path
-                end
+    context "ログイン済" do
+      before { sign_in user }
 
-                # js形式以外のリクエストは例外になること
-                it "Error from root_path(html)" do
-                    expect do
-                        get new_contact_group_relation_path, params: { add_user: other_user.public_uid }, headers: header
-                    end.to raise_error(ActionController::RoutingError)
-                end
+      context "root_pathからAjax通信かつフォーマットがJS形式の場合" do
+        context "パラメータが正の場合" do
+          subject {
+            post contact_group_relations_path,
+                 params: valid_params,
+                 headers: valid_header,
+                 xhr: true
+          }
 
-                # root_path以外からのリクエスト(アプリ内)をroot_pathへリダイレクト
-                it "Redirect not from root_path" do
-                    get new_contact_group_relation_path, params: { add_user: other_user.public_uid }, headers: invalid_header, xhr: true
-                    expect(response.status).to eq 302
-                    expect(response).to redirect_to root_path
-                end
-            end
+          it "リクエスト成功" do
+            subject
+            expect(response.status).to eq 200
+          end
+
+          it "リレーション作成成功" do
+            expect do
+              subject
+            end.to change { ContactGroupRelation.count }.by(1)
+          end
+
+          it "追加完了メッセージ表示" do
+            subject
+            expect(response.body).to include "#{contact_group.name}に追加しました。"
+          end
         end
 
-        # 未ログインユーザー
-        context "user is not logged in" do
-            context "Request" do
-                # 認証失敗すること
-                it "Authentication error" do
-                    get new_contact_group_relation_path, params: { add_user: other_user.public_uid }, headers: header, xhr: true
-                    expect(response.status).to eq 401
-                end
+        context "パラメータが不正な場合" do
+          context "パラメータに他ユーザーのグループIDが含まれていた場合" do
+            subject {
+              post contact_group_relations_path,
+                  params: params_with_other_group_id,
+                  headers: valid_header,
+                  xhr: true
+            }
+
+            it "リクエスト成功" do
+              subject
+              expect(response.status).to eq 200
             end
+
+            it "リレーション作成失敗" do
+              expect do
+                subject
+              end.to change { ContactGroupRelation.count }.by(0)
+            end
+
+            it "追加失敗メッセージ表示" do
+              subject
+              expect(response.body).to include "処理に失敗しました。"
+            end
+          end
+
+          context "パラメータに自分のIDが含まれている場合" do
+            subject {
+              post contact_group_relations_path,
+                  params: params_with_current_user_id,
+                  headers: valid_header,
+                  xhr: true
+            }
+
+            it "リクエスト成功" do
+              subject
+              expect(response.status).to eq 200
+            end
+
+            it "リレーション作成失敗" do
+              expect do
+                subject
+              end.to change { ContactGroupRelation.count }.by(0)
+            end
+
+            it "追加失敗メッセージ表示" do
+              subject
+              expect(response.body).to include "処理に失敗しました。"
+            end
+          end
+
+          context "既に存在するリレーションのパラメータの場合" do
+            subject {
+              post contact_group_relations_path,
+                  params: registered_params,
+                  headers: valid_header,
+                  xhr: true
+            }
+
+            it "リクエスト成功" do
+              subject
+              expect(response.status).to eq 200
+            end
+
+            it "リレーション作成失敗" do
+              expect do
+                subject
+              end.to change { ContactGroupRelation.count }.by(0)
+            end
+
+            it "追加失敗メッセージ表示" do
+              subject
+              expect(response.body).to include "処理に失敗しました。"
+            end
+          end
         end
+      end
+
+      context "フォーマットがJS形式以外の場合" do
+        it "ルーティングエラー" do
+          expect do
+            post contact_group_relations_path(format: :html),
+                 params: valid_params,
+                 headers: valid_header,
+                 xhr: true
+          end.to raise_error(ActionController::RoutingError)
+        end
+      end
+
+      context "Ajax通信でない場合" do
+        it "ルーティングエラー" do
+          expect do
+            post contact_group_relations_path(format: :js),
+                 params: valid_params,
+                 headers: valid_header
+          end.to raise_error(ActionController::RoutingError)
+        end
+      end
+
+      context "root_path以外からの場合" do
+        subject {
+          post contact_group_relations_path,
+               params: valid_params,
+               headers: invalid_header,
+               xhr: true
+        }
+
+        it "リクエスト成功" do
+          subject
+          expect(response.status).to eq 200
+        end
+
+        it "リレーション作成失敗" do
+          expect do
+            subject
+          end.to change { ContactGroupRelation.count }.by(0)
+        end
+
+        it "root_pathへリダイレクト" do
+          subject
+          expect(response).to redirect_to root_path
+        end
+      end
     end
 
-    # コンタクトグループリレーション新規作成
-    describe "POST #create" do
-        let!(:contact_group_relation){ contact_group.contact_group_relations.create(user_id: therd_user.id) }
-        # 既に登録されているリレーションのパラメータ
-        let(:registered_contact_group_relation_params){ { "contact_group_relation"=>{"contact_group_id"=>"#{contact_group.id}", "user_id"=>"#{therd_user.public_uid}"} } }
-        # 他人のグループIDが含まれるパラメータ
-        let(:other_contact_group_relation_params){ { "contact_group_relation"=>{"contact_group_id"=>"#{other_contact_group.id}", "user_id"=>"#{therd_user.public_uid}"} } }
-        # 自分のユーザーIDが含まれるパラメータ
-        let(:current_user_contact_group_relation_params){ { "contact_group_relation"=>{"contact_group_id"=>"#{contact_group.id}", "user_id"=>"#{user.public_uid}"} } }
-        # 有効なパラメータ
-        let(:contact_group_relation_params){ { "contact_group_relation"=>{"contact_group_id"=>"#{contact_group.id}", "user_id"=>"#{other_user.public_uid}"} } }
-        # ログイン済みユーザー
-        context "user is logged in" do
-            before do
-                sign_in user
-            end
-
-            context "Request" do
-                # root_pathからのリクエスト(js形式)成功
-                it "Success from root_path(js)" do
-                    post contact_group_relations_path, params: contact_group_relation_params, headers: header, xhr: true
-                    expect(response.status).to eq 200
-                    expect(response).not_to redirect_to root_path
-                end
-
-                # js形式以外のリクエストは例外になること
-                it "Error from root_path(html)" do
-                    expect do
-                        post contact_group_relations_path, params: contact_group_relation_params, headers: header
-                    end.to raise_error(ActionController::RoutingError)
-                end
-
-                # root_path以外からのリクエスト(アプリ内)をroot_pathへリダイレクト
-                it "Redirect not from root_path" do
-                    post contact_group_relations_path, params: contact_group_relation_params, headers: invalid_header, xhr: true
-                    expect(response.status).to eq 200
-                    expect(response).to redirect_to root_path
-                end
-            end
-
-            context "Create" do
-                # 有効なパラメータかつ有効なアプリ内ページ(root_path: 成功)
-                it "Success valid params and valid header" do
-                    expect do
-                        post contact_group_relations_path, params: contact_group_relation_params, headers: header, xhr: true
-                    end.to change{ ContactGroupRelation.count }.by(1)
-                end
-
-                # 登録済みのリレーションの場合(失敗)
-                it "Error invalid params(Registered relation)" do
-                    expect do
-                        post contact_group_relations_path, params: registered_contact_group_relation_params, headers: header, xhr: true
-                    end.to change{ ContactGroupRelation.count }.by(0)
-                end
-
-                # 他人のグループIDがパラメータに含まれた場合(失敗)
-                it "Error invalid params(other_group)" do
-                    expect do
-                        post contact_group_relations_path, params: other_contact_group_relation_params, headers: header, xhr: true
-                    end.to change{ ContactGroupRelation.count }.by(0)
-                end
-
-                # パラメータに自分のIDが含まれていた場合(失敗)
-                it "Error invalid params(current_user)" do
-                    expect do
-                        post contact_group_relations_path, params: current_user_contact_group_relation_params, headers: header, xhr: true
-                    end.to change{ ContactGroupRelation.count }.by(0)
-                end
-
-                # 無効なアプリ内ページ(失敗)
-                it "Error invalid header" do
-                    expect do
-                        post contact_group_relations_path, params: contact_group_relation_params, headers: invalid_header, xhr: true
-                    end.to change{ ContactGroupRelation.count }.by(0)
-                end
-            end
-
-            context "Message" do
-                # 成功メッセージが表示されること
-                it "Success message" do
-                    post contact_group_relations_path, params: contact_group_relation_params, headers: header, xhr: true
-                    expect(response.body).to match("グループに追加しました。")
-                end
-
-                # エラーメッセージが表示されること
-                it "Error message" do
-                    post contact_group_relations_path, params: other_contact_group_relation_params, headers: header, xhr: true
-                    expect(response.body).to match("処理に失敗しました。")
-                end
-            end
-        end
+    context "未ログイン" do
+      it "認証失敗エラーコードが返ってくること" do
+        post contact_group_relations_path,
+             params: valid_params,
+             headers: valid_header,
+             xhr: true
+        expect(response.status).to eq 401
+      end
     end
-
+  end
 end

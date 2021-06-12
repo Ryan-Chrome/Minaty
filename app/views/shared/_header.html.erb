@@ -1,15 +1,15 @@
 <header>
-    <%= link_to "Minaty", root_path, data: {"turbolinks"=>false}, id: "logo" %>
-    <% if user_signed_in? %>
-        <button id = "sidebar-btn-trigger">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
-        <% if @timer_on.present? %>
-            <div id = "header-time-btn">
-                <i class="fas fa-stopwatch"></i> <span id = "btn-time">Timer</span>
-            </div>
-        <% end %>
+  <span id = "logo">Minaty</span>
+  <% if user_signed_in? %>
+    <button id = "sidebar-btn-trigger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <% if @timer_on.present? %>
+      <div id = "header-time-btn">
+        <i class="fas fa-stopwatch"></i> <span id = "btn-time">Timer</span>
+      </div>
     <% end %>
+  <% end %>
 </header>

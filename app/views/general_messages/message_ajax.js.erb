@@ -1,0 +1,10 @@
+<% if @other_user_messages.present? %>
+  var modal_show_chat = document.getElementById("chat-log");
+  <% if params[:message_date].present? && @other_user_messages.last.created_at.strftime("%m/%d") == params[:message_date] %>
+    var message_date_head = modal_show_chat.getElementsByClassName("message-date")[0];
+    if(message_date_head){
+      message_date_head.remove();
+    }
+  <% end %>
+  modal_show_chat.insertAdjacentHTML("afterbegin", "<%= j(render "general_messages/other_user_chat") %>");
+<% end %>

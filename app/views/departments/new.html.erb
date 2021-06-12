@@ -1,0 +1,43 @@
+<div id = "common-container">
+  <div id = "management-top">
+    <div id = "department-config-container">
+      <h1><i class="fas fa-cog"></i> 部署設定</h1>
+      <div id = "department-config-form">
+        <span id = "list-head">設定中部署リスト</span>
+        <ul id = "department-list">
+          <% if @departments.present? %>
+            <% @departments.each do |department| %>
+              <li>
+                <%= department.name %>
+                <%= 
+                  link_to "編集",
+                  edit_department_path(department.id),
+                  method: :get,
+                  id: "edit-#{department.id}",
+                  class: "edit-btn"
+                %>
+                <%= 
+                  link_to "削除",
+                  department_path(department.id),
+                  method: :delete,
+                  id: "destroy-#{department.id}",
+                  class: "destroy-btn",
+                  data: {
+                      confirm: "#{department.name}に設定されているユーザーは部署が未設定に設定されます。\n削除しますか？"
+                  }
+                %>
+              </li>
+            <% end %>
+          <% end %>
+        </ul>
+        
+        <div id = "department-form">
+          <%= form_with model: @new_department, local: true do |f| %>
+            <%= f.text_field :name, class: "form" %>
+            <%= f.submit "追加", class: "btn" %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

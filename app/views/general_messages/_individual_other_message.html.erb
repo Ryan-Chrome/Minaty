@@ -1,16 +1,12 @@
 <% # ユーザー詳細メッセージ更新用　受信時パーシャル %>
 <div class = "message-content other-user">
-    <span class = "message-user-name">
-        <%= message.user.name %>
-    </span>
-    <p class = "message">
-        <%= safe_join(message.content.split("\n"), tag(:br)) %>
-        <% if message.room_id.present? %>
-            <br><%= link_to "スケジュール追加", schedules_meeting_new_path(meeting_room_id: message.room_id), remote: true, class: "schedule-add-meeting" %>
-            <br><%= link_to "ミーティングへ", meeting_room_path(message.room_id) %>
-        <% end %>
-    </p>
-    <span class = "message-time"><%= l message.created_at %></span>
+  <span class = "message-user-name">
+    <%= message.user.name %>
+  </span>
+  <p class = "message">
+    <%= safe_join(message.content.split("\n"), tag(:br)) %>
+  </p>
+  <span class = "message-time"><%= l message.created_at %></span>
 </div>
 
 

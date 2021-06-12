@@ -1,43 +1,43 @@
 <% if @schedules.present? %>
-    <div class = "schedule-time">
-        <ul class = "time-list">
-            <% @work_time.each do |n| %>
-                <li style="height: calc(100%/<%= @work_length %>);"><span><%= "#{n}:00" %></span></li>
-            <% end %>
-        </ul>
+  <div class = "schedule-time">
+    <ul class = "time-list">
+      <% @work_time.each do |n| %>
+        <li style="height: calc(100%/<%= @work_length %>);"><span><%= "#{n}:00" %></span></li>
+      <% end %>
+    </ul>
+  </div>
+  <div class = "schedule-time-line">
+    <ul class = "line-list">
+      <% @work_time.each do %>
+        <li style="height: calc(100%/<%= @work_length %>);"><span></span></li>
+      <% end %>
+    </ul>
+    <% s = 0 %>
+    <div style="top: calc(100%/<%= @work_length*2 %>); height: calc(100% - 100%/<%= @work_length %>);" class = "schedule" id = "home-schedule-count" data-schedule_count = "<%= @schedules.length %>">
+      <% (0..((@work_length-1)*6)-1).each do |i| %>
+        <% if @schedule_times.sum([]).include?(i) %>
+          <% if @schedule_start[s] == i && @schedule_end[s] == i %>
+            <span style="height: calc(100%/<%= (@work_length-1) * 6 %>);" class = "box-<%= s %>"><span style="pointer-events: none;"  class = "schedule-name" id = "schedule-name-<%= s %>"><%= @schedules[s].name.truncate(10) %></span><span style="pointer-events: none;" class = "time" id = "time-<%= s %>"><%= "#{@schedules[s].start_at}~#{@schedules[s].finish_at}" %></span></span>
+            <% s += 1 %>
+          <% elsif @schedule_start[s] == i %>
+            <span style="height: calc(100%/<%= (@work_length-1) * 6 %>);" class = "box-<%= s %>"><span style="pointer-events: none;" class = "schedule-name" id = "schedule-name-<%= s %>"><%= @schedules[s].name.truncate(10) %></span></span>
+          <% elsif @schedule_end[s] == i %>
+            <span style="height: calc(100%/<%= (@work_length-1) * 6 %>);" class = "box-<%= s %>"><span class = "time" id = "time-<%= s %>"><%= "#{@schedules[s].start_at}~#{@schedules[s].finish_at}" %></span></span>
+            <% s += 1 %>
+          <% else %>
+            <span style="height: calc(100%/<%= (@work_length-1) * 6 %>);" class = "box-<%= s %>"></span>
+          <% end %>
+        <% else %>
+          <span style="height: calc(100%/<%= (@work_length-1) * 6 %>);" style="opacity: 0;"></span>
+        <% end %>
+      <% end %>
     </div>
-    <div class = "schedule-time-line">
-        <ul class = "line-list">
-            <% @work_time.each do %>
-                <li style="height: calc(100%/<%= @work_length %>);"><span></span></li>
-            <% end %>
-        </ul>
-        <% s = 0 %>
-        <div style="top: calc(100%/<%= @work_length*2 %>); height: calc(100% - 100%/<%= @work_length %>);" class = "schedule" id = "home-schedule-count" data-schedule_count = "<%= @schedules.length %>">
-            <% (0..((@work_length-1)*6)-1).each do |i| %>
-                <% if @schedule_times.sum([]).include?(i) %>
-                    <% if @schedule_start[s] == i && @schedule_end[s] == i %>
-                        <span style="height: calc(100%/<%= (@work_length-1) * 6 %>);" class = "box-<%= s %>"><span style="pointer-events: none;"  class = "schedule-name" id = "schedule-name-<%= s %>"><%= @schedules[s].name.truncate(10) %></span><span style="pointer-events: none;" class = "time" id = "time-<%= s %>"><%= "#{@schedules[s].start_at}~#{@schedules[s].finish_at}" %></span></span>
-                        <% s += 1 %>
-                    <% elsif @schedule_start[s] == i %>
-                        <span style="height: calc(100%/<%= (@work_length-1) * 6 %>);" class = "box-<%= s %>"><span style="pointer-events: none;" class = "schedule-name" id = "schedule-name-<%= s %>"><%= @schedules[s].name.truncate(10) %></span></span>
-                    <% elsif @schedule_end[s] == i %>
-                        <span style="height: calc(100%/<%= (@work_length-1) * 6 %>);" class = "box-<%= s %>"><span class = "time" id = "time-<%= s %>"><%= "#{@schedules[s].start_at}~#{@schedules[s].finish_at}" %></span></span>
-                        <% s += 1 %>
-                    <% else %>
-                        <span style="height: calc(100%/<%= (@work_length-1) * 6 %>);" class = "box-<%= s %>"></span>
-                    <% end %>
-                <% else %>
-                    <span style="height: calc(100%/<%= (@work_length-1) * 6 %>);" style="opacity: 0;"></span>
-                <% end %>
-            <% end %>
-        </div>
-    </div>
+  </div>
 <% else %>
-    <div class = "none-schedules-content">
-        <div class = "none-schedules-content-text">
-            <i class="fas fa-calendar-alt"></i>
-            <span>スケジュール未設定</span>
-        </div>
+  <div class = "none-schedules-content">
+    <div class = "none-schedules-content-text">
+      <i class="fas fa-calendar-alt"></i>
+      <span>スケジュール未設定</span>
     </div>
+  </div>
 <% end %>

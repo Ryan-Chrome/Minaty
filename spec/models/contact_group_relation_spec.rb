@@ -1,28 +1,28 @@
-require 'rails_helper'
+require "rails_helper"
 
-# コンタクトグループモデル関連テスト
 RSpec.describe ContactGroupRelation, type: :model do
+  let!(:dept) { create(:human_resources_dept) }
+  let!(:user) { create(:user, department_id: dept.id) }
+  let!(:other_user) { create(:other_user, department_id: dept.id) }
+  let!(:contact_group) { create(:contact_group, user_id: user.id) }
+  let(:contact_group_relation) { contact_group.contact_group_relations.build(user_id: other_user.id) }
 
-    let!(:user){ create(:user) }
-    let!(:other_user){ create(:other_user) }
-    let!(:contact_group){ user.contact_groups.create(name: "テストグループ") }
-    let(:contact_group_relation){ contact_group.contact_group_relations.build(user_id: other_user.id) }
+  it "全てのカラムが正常" do
+    expect(contact_group_relation).to be_valid
+  end
 
-    # 全てのカラムが正の場合
-    it "is valid with a user_id and contact_group_id" do
-        expect(contact_group_relation).to be_valid
-    end
+  it "ユーザーIDが空の場合" do
+    contact_group_relation.user_id = ""
+    expect(contact_group_relation).not_to be_valid
+  end
 
-    # ユーザーIDが空の場合
-    it "is invalid without a user_id" do
-        contact_group_relation.user_id = ""
-        expect(contact_group_relation).not_to be_valid
-    end
+  it "コンタクトグループIDが空の場合" do
+    contact_group_relation.contact_group_id = ""
+    expect(contact_group_relation).not_to be_valid
+  end
 
-    # コンタクトグループIDが空の場合
-    it "is invalid without a contact_group_id" do
-        contact_group_relation.contact_group_id = ""
-        expect(contact_group_relation).not_to be_valid
-    end
-
+  it "ユーザーIDとコンタクトグループIDの組み合わせが既に存在する場合" do
+    contact_group.contact_group_relations.create(user_id: other_user.id)
+    expect(contact_group_relation).not_to be_valid
+  end
 end

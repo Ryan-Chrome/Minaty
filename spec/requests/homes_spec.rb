@@ -1,27 +1,32 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe "Home", type: :request do
-    let!(:user){ create(:user) }
+  let!(:dept) { create(:human_resources_dept) }
+  let!(:user) { create(:user, department_id: dept.id) }
 
-    # ログイン済みユーザー
-    context "user is logged in" do
-        before do
-            sign_in user
-        end
-
-        it "request success" do
-            get root_path
-            expect(response.status).to eq 200
-            expect(response.body).to match(/<h6><i class="fas fa-comment"><\/i> チャットフォーム<\/h6>/i)
-        end
+  context "ログイン済" do
+    before { sign_in user }
+    
+    it "リクエスト成功" do
+      get root_path
+      expect(response.status).to eq 200
     end
 
-    # 未ログインユーザー
-    context "user is not logged in" do
-        it "request success" do
-            get root_path
-            expect(response.status).to eq 200
-        end
+    it "ログイン済ホーム画面表示" do
+      get root_path
+      expect(response.body).to include "チャットフォーム"
+    end
+  end
+
+  context "未ログイン" do
+    it "リクエスト成功" do
+      get root_path
+      expect(response.status).to eq 200
     end
 
+    it "未ログインホーム画面表示" do
+      get root_path
+      expect(response.body).to include "Login"
+    end
+  end
 end

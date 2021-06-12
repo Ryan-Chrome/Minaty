@@ -1,12 +1,12 @@
 <div class = "group-container">
-    <span style="pointer-events: none;"><%= @contact_group.name.truncate(10) %></span>
-    <input type="checkbox" class = "group-check">
+  <span style="pointer-events: none;"><%= @contact_group.name.truncate(10) %></span>
+  <input type="checkbox" class = "group-check">
 </div>
 <ul>
-    <% @contact_group.contact_group_relations.each do |relation| %>
-        <li class = "user-selector-<%= relation.user.public_uid %> user-selector">
-            <%= relation.user.name %>
-            <input type="checkbox" value="<%= relation.user.public_uid %>">
-        </li>
-    <% end %>
+  <% @contact_group.users.each do |user| %>
+    <li class = "user-selector-<%= user.public_uid %> user-selector">
+      <%= user.name %>
+      <input type="checkbox" value="<%= user.public_uid %>">
+    </li>
+  <% end %>
 </ul>

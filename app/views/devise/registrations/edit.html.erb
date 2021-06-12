@@ -1,15 +1,10 @@
 <div id = "common-container">
-	<div id = "side-menu">
-		<%= render "homes/side_menu" %>
-	</div>
 	<div id = "management-top">
-		<%= render "managements/menu_links" %>
 		<div id = "user-edit-form">
 			<div id = "user-edit-form-content">
-				<%= form_with model: @user, url: other_user_registration_path(@user.public_uid), method: :put do |f| %>
+				<%= form_with model: @user, url: other_user_registration_path(@user.public_uid), local: true, method: :put do |f| %>
 					<h2>ユーザー編集</h2>
-					<%= render "devise/shared/error_messages", resource: resource %>
-
+					
 					<div class = "field">
 						<%= f.label :name, "ユーザー名" %><br />
 						<%= f.text_field :name, class: "form" %>
@@ -21,18 +16,14 @@
 					</div>
 
 					<div class = "field">
-						<%= f.label :department, "所属" %><br />
-						<%= f.select :department, [["人事部", "人事部"], ["開発部", "開発部"], ["営業部", "営業部"]], {include_blank: "部署を選択してください"}  %>
+						<%= f.label :department_id, "部署" %><br />
+						<%= f.select :department_id,  @department_select, {include_blank: "部署を選択してください"}  %>
 					</div>
 
 					<div class="field">
 						<%= f.label :email %><br />
 						<%= f.email_field :email, class: "form" %>
 					</div>
-
-					<% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
-						<div>Currently waiting confirmation for: <%= resource.unconfirmed_email %></div>
-					<% end %>
 
 					<div class="field">
 						<%= f.label :password, "新しいパスワード(パスワードを変更する場合、入力)" %>
@@ -45,10 +36,10 @@
 					</div>
 
 					<div class = "check-box-form">
-                        <span>管理者権限</span>
-                        <%= f.check_box :admin, class: "check-box" %>
-                        <%= f.label :admin, "管理権限を付与", class: "check-box-label" %>
-                    </div>
+              <span>管理者権限</span>
+              <%= f.check_box :admin, class: "check-box" %>
+              <%= f.label :admin, "管理権限を付与", class: "check-box-label" %>
+          </div>
 
 					<div class="field">
 						<%= f.label :current_password, "管理者パスワード(必須)" %>
@@ -66,14 +57,13 @@
 
 				<p>※このユーザーに関連する情報は全て削除されます。</p>
 				
-				<%= form_with url: destroy_other_user_registration_path(@user.public_uid), method: :delete do |f| %>
+				<%= form_with url: destroy_other_user_registration_path(@user.public_uid), local: true, method: :delete do |f| %>
 					<%= f.label :current_password, "管理者パスワード(必須)" %>
-					<%= f.password_field :current_password, class: "form" %>
+					<%= f.password_field :current_password, class: "form", style: "#{"border-bottom: 1px solid red;" if flash[:alert].present?}" %>
 
 					<%= f.submit "削除", class: "btn", data: { confirm: "このユーザーに関する情報は全て削除されます。実行しますか？" } %>
 				<% end %>
 			</div>
 		</div>
 	</div>
-	
 </div>

@@ -1,0 +1,18 @@
+<% #ユーザー検索ボックス（検索時）用JS %>
+<% #ユーザー検索ボックス　非表示 %>
+var user_search_box = document.getElementById("user-search-box");
+user_search_box.style.display = "none";
+<% #ユーザー検索結果 表示 %>
+modal.insertAdjacentHTML("beforeend", "<%= j(render "users/modal_search") %>");
+var user_search_response_container = document.getElementById("user-search-response");
+user_search_response_container.style.display = "block";
+var user_search_response_back_btn = document.getElementById("user-search-response-back-btn");
+var user_search_response_close_btn = document.getElementById("user-search-response-close");
+user_search_response_back_btn.onclick = () => {
+  user_search_response_container.remove();
+  user_search_box.style.display = "block";
+}
+user_search_response_close_btn.onclick = () => {
+  modal.style.display = "none";
+  user_search_response_container.remove();
+}

@@ -1,14 +1,14 @@
 <div id = "add-schedule-data">
-    <div class = "modal-top-bar">
-        <ul>
-            <li class = "topbar-header">スケジュール追加</li>
-            <li id = "add-schedule-data-close" class = "topbar-close-btn"><span>＋</span></li>
-        </ul>
-    </div>
-    <%= form_with url: new_schedule_path, method: :get do |f| %>
-        <%= f.label :add_date, "日付選択" %>
-        <%= f.date_field :add_date, class: "form data-text", value: Date.today %>
+  <div class = "modal-top-bar">
+    <ul>
+      <li class = "topbar-header">スケジュール追加</li>
+      <li id = "add-schedule-data-close" class = "topbar-close-btn"><span>＋</span></li>
+    </ul>
+  </div>
+  <%= form_with url: new_schedule_path, method: :get do |f| %>
+    <%= f.label :add_date, "日付選択" %>
+    <%= f.date_field :add_date, class: "form data-text", value: Date.today %>
 
-        <%= f.submit "次へ", class: "btn" %>
-    <% end %>
+    <%= f.submit "次へ", class: "btn" %>
+  <% end %>
 </div>
