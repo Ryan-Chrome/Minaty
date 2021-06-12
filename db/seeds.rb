@@ -9,13 +9,20 @@
 
 require 'faker'
 
+Department.create!(name: "未設定")
+
+dept1 = Department.create!(name: "人事部")
+dept2 = Department.create!(name: "開発部")
+dept3 = Department.create!(name: "営業部")
+
+
 User.create!(
     name: "加藤 斗也",
     kana: "カトウ トウヤ",
     email: "admin@email.com",
-    assignment: "人事部",
     admin: true,
-    password: "foobar"
+    password: "foobar",
+    department: dept1
 )
 
 50.times do |n|
@@ -26,8 +33,8 @@ User.create!(
         name: sample_name,
         kana: sample_kana,
         email: sample_email,
-        assignment: "人事部",
-        password: "foobar"
+        password: "foobar",
+        department: dept1
     )
 end
 
@@ -39,8 +46,8 @@ end
         name: sample_name,
         kana: sample_kana,
         email: sample_email,
-        assignment: "開発部",
-        password: "foobar"
+        password: "foobar",
+        department: dept2
     )
 end
 
@@ -52,7 +59,7 @@ end
         name: sample_name,
         kana: sample_kana,
         email: sample_email,
-        assignment: "営業部",
-        password: "foobar"
+        password: "foobar",
+        department: dept3
     )
 end
