@@ -88,6 +88,7 @@ RSpec.describe "UserSearch", type: :system, js: true do
     find("#sidebar-btn-trigger").click
     first(".my-report-link").click
     # ダッシュボード表示確認
+    sleep 1
     expect(page).to have_css "#details-content"
     expect(find("#details-content")).to have_content "#{admin_user.name}"
   end
